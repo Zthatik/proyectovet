@@ -206,22 +206,53 @@ export function AppointmentCalendar() {
                 {/* Appointment blocks */}
                 {appts.map(a => {
                   const cfg = STATUS_COLOR[a.status] ?? STATUS_COLOR.programada;
+                  const s   = Math.max(toMin(new Date(a.scheduledAt)), GRID_START) - GRID_START;
+                  const e   = Math.min(toMin(new Date(a.endAt)),       GRID_END)   - GRID_START;
+                  const dur = e - s; // minutes
+                  const isShort  = dur <= 30;  // ≤ 30 min → solo hora en una línea
+                  const isMedium = dur <= 45;  // ≤ 45 min → hora + nombre en fila
                   return (
                     <button
                       key={a.id}
                       className={`absolute inset-x-1 rounded-lg ${cfg.solid} text-white
-                        flex flex-col items-center justify-center text-center px-1 overflow-hidden
-                        hover:opacity-90 hover:shadow-lg active:scale-95 transition-all cursor-pointer z-10`}
+                        overflow-hidden hover:opacity-90 hover:shadow-lg active:scale-95
+                        transition-all cursor-pointer z-10 flex
+                        ${isShort ? 'items-center justify-center px-1.5' : 'flex-col items-center justify-center text-center px-1.5'}`}
                       style={blockStyle(a)}
                       onClick={() => setSelected(a)}
                     >
-                      <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
-                        {hhmm(new Date(a.scheduledAt))}
-                      </span>
-                      {a.patientName && (
-                        <span className="text-[10px] leading-tight opacity-90 truncate w-full text-center mt-0.5">
-                          {a.patientName}
+                      {isShort ? (
+                        /* Cita corta: todo en una línea */
+                        <span className="text-[10px] font-bold leading-none truncate drop-shadow-sm whitespace-nowrap">
+                          {hhmm(new Date(a.scheduledAt))}{a.patientName ? ` · ${a.patientName}` : ''}
                         </span>
+                      ) : isMedium ? (
+                        /* Cita media: hora + nombre compactos */
+                        <>
+                          <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
+                            {hhmm(new Date(a.scheduledAt))}
+                          </span>
+                          {a.patientName && (
+                            <span className="text-[10px] leading-tight opacity-90 truncate w-full text-center">
+                              {a.patientName}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        /* Cita larga: hora, nombre y tipo */
+                        <>
+                          <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
+                            {hhmm(new Date(a.scheduledAt))} – {hhmm(new Date(a.endAt))}
+                          </span>
+                          {a.patientName && (
+                            <span className="text-[11px] leading-tight opacity-95 font-medium truncate w-full text-center mt-0.5">
+                              {a.patientName}
+                            </span>
+                          )}
+                          <span className="text-[10px] leading-tight opacity-75 truncate w-full text-center">
+                            {TYPE_LABEL[a.type] ?? a.type}
+                          </span>
+                        </>
                       )}
                     </button>
                   );
