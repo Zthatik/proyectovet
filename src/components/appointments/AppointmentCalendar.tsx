@@ -74,7 +74,11 @@ export function AppointmentCalendar() {
   function blockStyle(a: Appointment) {
     const s = Math.max(toMin(new Date(a.scheduledAt)), GRID_START) - GRID_START;
     const e = Math.min(toMin(new Date(a.endAt)),       GRID_END)   - GRID_START;
-    return { top: `${(s / GRID_RANGE) * 100}%`, height: `${Math.max(((e - s) / GRID_RANGE) * 100, 2.5)}%` };
+    return {
+      top:       `${(s / GRID_RANGE) * 100}%`,
+      height:    `${((e - s) / GRID_RANGE) * 100}%`,
+      minHeight: '42px',   // garantiza espacio para hora + nombre
+    };
   }
 
   const today         = new Date();
