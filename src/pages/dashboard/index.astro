@@ -75,13 +75,13 @@ const statusColors: Record<string, string> = {
     ) : (
       <>
         <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard client:visible title="Pacientes" value={String(patientCount.count)}
+          <StatCard title="Pacientes" value={String(patientCount.count)}
             description="Registrados en el sistema" icon={PawPrint} href="/pacientes" />
-          <StatCard client:visible title="Citas Hoy" value={String(todayAppts.count)}
+          <StatCard title="Citas Hoy" value={String(todayAppts.count)}
             description="Programadas para hoy" icon={Calendar} href="/citas" />
-          <StatCard client:visible title="Productos" value={String(productCount.count)}
+          <StatCard title="Productos" value={String(productCount.count)}
             description="En inventario" icon={Package} href="/inventario" />
-          <StatCard client:visible title="Facturación" value={`₡${revenue.toLocaleString('es-CR')}`}
+          <StatCard title="Facturación" value={`₡${revenue.toLocaleString('es-CR')}`}
             description="Ingresos del mes" icon={Receipt} href="/facturacion" />
         </div>
 
