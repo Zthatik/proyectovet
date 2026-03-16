@@ -54,19 +54,7 @@ export function AppointmentCalendar() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading]           = useState(true);
   const [selected, setSelected]         = useState<Appointment | null>(null);
-  const [nowPct, setNowPct]             = useState<number | null>(null);
-
   useEffect(() => { fetchWeek(); }, [weekStart]);
-
-  useEffect(() => {
-    const calc = () => {
-      const m = toMin(new Date());
-      setNowPct(m >= GRID_START && m <= GRID_END ? ((m - GRID_START) / GRID_RANGE) * 100 : null);
-    };
-    calc();
-    const id = setInterval(calc, 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   async function fetchWeek() {
     setLoading(true);
@@ -195,64 +183,26 @@ export function AppointmentCalendar() {
                   />
                 ))}
 
-                {/* Now indicator */}
-                {isToday && nowPct !== null && (
-                  <div className="absolute inset-x-0 z-20 flex items-center pointer-events-none" style={{ top: `${nowPct}%` }}>
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5 ring-2 ring-white shadow shrink-0" />
-                    <div className="flex-1 h-[2px] bg-red-500 shadow-sm" />
-                  </div>
-                )}
-
                 {/* Appointment blocks */}
                 {appts.map(a => {
                   const cfg = STATUS_COLOR[a.status] ?? STATUS_COLOR.programada;
-                  const s   = Math.max(toMin(new Date(a.scheduledAt)), GRID_START) - GRID_START;
-                  const e   = Math.min(toMin(new Date(a.endAt)),       GRID_END)   - GRID_START;
-                  const dur = e - s; // minutes
-                  const isShort  = dur <= 30;  // ≤ 30 min → solo hora en una línea
-                  const isMedium = dur <= 45;  // ≤ 45 min → hora + nombre en fila
                   return (
                     <button
                       key={a.id}
                       className={`absolute inset-x-1 rounded-lg ${cfg.solid} text-white
                         overflow-hidden hover:opacity-90 hover:shadow-lg active:scale-95
-                        transition-all cursor-pointer z-10 flex flex-col items-center
-                        justify-start text-center px-1.5 pt-1`}
+                        transition-all cursor-pointer z-10 flex flex-col
+                        items-center justify-center text-center px-1.5`}
                       style={blockStyle(a)}
                       onClick={() => setSelected(a)}
                     >
-                      {isShort ? (
-                        /* ≤30 min: hora · nombre en una sola línea */
-                        <span className="text-[10px] font-bold leading-none truncate w-full drop-shadow-sm">
-                          {hhmm(new Date(a.scheduledAt))}{a.patientName ? ` · ${a.patientName}` : ''}
+                      <span className="text-[11px] font-bold leading-tight w-full truncate">
+                        {hhmm(new Date(a.scheduledAt))} – {hhmm(new Date(a.endAt))}
+                      </span>
+                      {a.patientName && (
+                        <span className="text-[11px] leading-tight font-medium w-full truncate mt-0.5 opacity-90">
+                          {a.patientName}
                         </span>
-                      ) : isMedium ? (
-                        /* ≤45 min: hora arriba, nombre debajo */
-                        <>
-                          <span className="text-[11px] font-bold leading-tight w-full truncate drop-shadow-sm">
-                            {hhmm(new Date(a.scheduledAt))}
-                          </span>
-                          {a.patientName && (
-                            <span className="text-[11px] leading-tight font-medium w-full truncate mt-0.5">
-                              {a.patientName}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        /* >45 min: hora completa, nombre y tipo */
-                        <>
-                          <span className="text-[11px] font-bold leading-tight w-full truncate drop-shadow-sm">
-                            {hhmm(new Date(a.scheduledAt))} – {hhmm(new Date(a.endAt))}
-                          </span>
-                          {a.patientName && (
-                            <span className="text-[11px] leading-tight font-semibold w-full truncate mt-0.5">
-                              {a.patientName}
-                            </span>
-                          )}
-                          <span className="text-[10px] leading-tight opacity-80 w-full truncate mt-0.5">
-                            {TYPE_LABEL[a.type] ?? a.type}
-                          </span>
-                        </>
                       )}
                     </button>
                   );
