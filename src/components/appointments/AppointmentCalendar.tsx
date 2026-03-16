@@ -216,40 +216,40 @@ export function AppointmentCalendar() {
                       key={a.id}
                       className={`absolute inset-x-1 rounded-lg ${cfg.solid} text-white
                         overflow-hidden hover:opacity-90 hover:shadow-lg active:scale-95
-                        transition-all cursor-pointer z-10 flex
-                        ${isShort ? 'items-center justify-center px-1.5' : 'flex-col items-center justify-center text-center px-1.5'}`}
+                        transition-all cursor-pointer z-10 flex flex-col items-center
+                        justify-start text-center px-1.5 pt-1`}
                       style={blockStyle(a)}
                       onClick={() => setSelected(a)}
                     >
                       {isShort ? (
-                        /* Cita corta: todo en una línea */
-                        <span className="text-[10px] font-bold leading-none truncate drop-shadow-sm whitespace-nowrap">
+                        /* ≤30 min: hora · nombre en una sola línea */
+                        <span className="text-[10px] font-bold leading-none truncate w-full drop-shadow-sm">
                           {hhmm(new Date(a.scheduledAt))}{a.patientName ? ` · ${a.patientName}` : ''}
                         </span>
                       ) : isMedium ? (
-                        /* Cita media: hora + nombre compactos */
+                        /* ≤45 min: hora arriba, nombre debajo */
                         <>
-                          <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
+                          <span className="text-[11px] font-bold leading-tight w-full truncate drop-shadow-sm">
                             {hhmm(new Date(a.scheduledAt))}
                           </span>
                           {a.patientName && (
-                            <span className="text-[10px] leading-tight opacity-90 truncate w-full text-center">
+                            <span className="text-[11px] leading-tight font-medium w-full truncate mt-0.5">
                               {a.patientName}
                             </span>
                           )}
                         </>
                       ) : (
-                        /* Cita larga: hora, nombre y tipo */
+                        /* >45 min: hora completa, nombre y tipo */
                         <>
-                          <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
+                          <span className="text-[11px] font-bold leading-tight w-full truncate drop-shadow-sm">
                             {hhmm(new Date(a.scheduledAt))} – {hhmm(new Date(a.endAt))}
                           </span>
                           {a.patientName && (
-                            <span className="text-[11px] leading-tight opacity-95 font-medium truncate w-full text-center mt-0.5">
+                            <span className="text-[11px] leading-tight font-semibold w-full truncate mt-0.5">
                               {a.patientName}
                             </span>
                           )}
-                          <span className="text-[10px] leading-tight opacity-75 truncate w-full text-center">
+                          <span className="text-[10px] leading-tight opacity-80 w-full truncate mt-0.5">
                             {TYPE_LABEL[a.type] ?? a.type}
                           </span>
                         </>
