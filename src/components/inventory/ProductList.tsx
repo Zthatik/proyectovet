@@ -107,7 +107,7 @@ export function ProductList() {
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{categoryLabels[p.category] || p.category}</td>
                   <td className="px-4 py-3 text-muted-foreground font-mono text-xs hidden lg:table-cell">{p.sku || '—'}</td>
-                  <td className="px-4 py-3 text-right">₡{parseFloat(p.unitPrice).toLocaleString('es-CR')}</td>
+                  <td className="px-4 py-3 text-right">${parseFloat(p.unitPrice).toLocaleString('es-CL')}</td>
                   <td className="px-4 py-3 text-right">
                     <span className={`inline-flex items-center gap-1 font-medium ${p.stock <= p.minStock ? 'text-red-600' : 'text-green-700'}`}>
                       {p.stock <= p.minStock && <AlertTriangle className="h-3.5 w-3.5" />}

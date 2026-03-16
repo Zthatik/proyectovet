@@ -52,7 +52,7 @@ interface PrescriptionPDFProps {
 }
 
 export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProps) {
-  const date = new Date(rx.date).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const date = new Date(rx.date).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
     <Document>

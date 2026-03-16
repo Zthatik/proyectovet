@@ -65,11 +65,11 @@ interface InvoicePDFProps {
 }
 
 function fmt(val: string) {
-  return new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(Number(val));
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(Number(val));
 }
 
 export function InvoicePDF({ invoice: inv, items }: InvoicePDFProps) {
-  const date = new Date(inv.date).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const date = new Date(inv.date).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
   const sc = statusConfig[inv.status] || statusConfig.borrador;
   const hasDiscount = Number(inv.discount) > 0;
 

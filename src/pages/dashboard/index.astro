@@ -81,7 +81,7 @@ const statusColors: Record<string, string> = {
             description="Programadas para hoy" icon={Calendar} href="/citas" />
           <StatCard title="Productos" value={String(productCount.count)}
             description="En inventario" icon={Package} href="/inventario" />
-          <StatCard title="Facturación" value={`₡${revenue.toLocaleString('es-CR')}`}
+          <StatCard title="Facturación" value={`$${revenue.toLocaleString('es-CL')}`}
             description="Ingresos del mes" icon={Receipt} href="/facturacion" />
         </div>
 
@@ -103,7 +103,7 @@ const statusColors: Record<string, string> = {
                         {a.status}
                       </span>
                       <span class="text-xs text-muted-foreground">
-                        {new Date(a.scheduledAt).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(a.scheduledAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </a>

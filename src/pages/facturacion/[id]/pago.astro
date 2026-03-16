@@ -22,7 +22,7 @@ const pending = parseFloat(invoice.total);
   <div class="rounded-xl border bg-card p-6 max-w-md">
     <div class="mb-4">
       <p class="text-sm text-muted-foreground">Factura: <span class="font-mono font-medium">{invoice.invoiceNumber}</span></p>
-      <p class="text-2xl font-bold mt-1">₡{pending.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</p>
+      <p class="text-2xl font-bold mt-1">${pending.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</p>
     </div>
     <PaymentForm client:load invoiceId={id} total={pending} />
   </div>

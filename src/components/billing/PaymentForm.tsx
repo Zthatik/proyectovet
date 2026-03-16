@@ -29,7 +29,7 @@ export function PaymentForm({ invoiceId, total }: { invoiceId: number; total: nu
       {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
       <div>
-        <label className="block text-sm font-medium mb-1">Monto recibido (₡)</label>
+        <label className="block text-sm font-medium mb-1">Monto recibido ($)</label>
         <input type="number" step="0.01" {...register('amount')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
       </div>
 

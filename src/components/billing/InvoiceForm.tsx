@@ -110,7 +110,7 @@ export function InvoiceForm() {
                       className="w-full border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-primary/30" />
                   </td>
                   <td className="px-3 py-2 text-right text-xs font-medium">
-                    ₡{(item.quantity * item.unitPrice).toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                    ${(item.quantity * item.unitPrice).toLocaleString('es-CL', { maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-2 py-2">
                     {items.length > 1 && (
@@ -130,7 +130,7 @@ export function InvoiceForm() {
         <div className="space-y-2 w-56">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Subtotal</span>
-            <span>₡{subtotal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span>
+            <span>${subtotal.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">IVA (%)</span>
@@ -139,7 +139,7 @@ export function InvoiceForm() {
           </div>
           <div className="flex justify-between font-bold border-t pt-2">
             <span>Total</span>
-            <span>₡{total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</span>
+            <span>${total.toLocaleString('es-CL', { maximumFractionDigits: 0 })}</span>
           </div>
         </div>
       </div>

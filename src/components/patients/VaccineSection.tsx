@@ -195,9 +195,9 @@ export function VaccineSection({ patientId, canEdit }: { patientId: number; canE
                     {v.nextDoseDate && nextDoseBadge(v.nextDoseDate)}
                   </div>
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                    <span>Aplicada: {parseDate(v.applicationDate).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <span>Aplicada: {parseDate(v.applicationDate).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     {v.nextDoseDate && (
-                      <span>Próxima: {parseDate(v.nextDoseDate).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span>Próxima: {parseDate(v.nextDoseDate).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                     )}
                     {v.batchNumber && <span>Lote: {v.batchNumber}</span>}
                     {v.veterinarianName && <span>Dr. {v.veterinarianName}</span>}

@@ -43,12 +43,12 @@ const categoryLabels: Record<string, string> = {
       <dl class="space-y-2 text-sm">
         <div class="flex justify-between border-b pb-2">
           <dt class="text-muted-foreground">Precio venta</dt>
-          <dd class="font-semibold">₡{parseFloat(product.unitPrice).toLocaleString('es-CR')}</dd>
+          <dd class="font-semibold">${parseFloat(product.unitPrice).toLocaleString('es-CL')}</dd>
         </div>
         {product.costPrice && (
           <div class="flex justify-between border-b pb-2">
             <dt class="text-muted-foreground">Precio costo</dt>
-            <dd>₡{parseFloat(product.costPrice).toLocaleString('es-CR')}</dd>
+            <dd>${parseFloat(product.costPrice).toLocaleString('es-CL')}</dd>
           </div>
         )}
         <div class="flex justify-between border-b pb-2">

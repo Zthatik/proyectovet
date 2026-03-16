@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
 const COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2'];
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
 
 function StatCard({ title, value, sub, icon: Icon, color }: { title: string; value: string; sub?: string; icon: any; color: string }) {
   return (
@@ -118,7 +118,7 @@ export function ReportsCharts() {
             <BarChart data={revenueFormatted} margin={{ top: 4, right: 16, left: 16, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₡${(v / 1000).toFixed(0)}k`} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(v: number) => fmt(v)} labelFormatter={(l) => `Mes: ${l}`} />
               <Bar dataKey="total" fill="#2563eb" radius={[4, 4, 0, 0]} name="Ingresos" />
             </BarChart>

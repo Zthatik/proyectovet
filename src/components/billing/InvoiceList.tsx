@@ -91,7 +91,7 @@ export function InvoiceList() {
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">{inv.ownerFirstName} {inv.ownerLastName}</td>
                   <td className="px-4 py-3 text-right font-medium">
-                    ₡{parseFloat(inv.total).toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                    ${parseFloat(inv.total).toLocaleString('es-CL', { maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[inv.status] || 'bg-gray-100'}`}>

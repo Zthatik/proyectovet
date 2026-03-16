@@ -192,10 +192,10 @@ export function ClientPortal({ userName }: { userName: string }) {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(appt.scheduledAt).toLocaleDateString('es-CR', {
+                    {new Date(appt.scheduledAt).toLocaleDateString('es-CL', {
                       weekday: 'long', day: '2-digit', month: 'long',
                     })}{' '}
-                    {new Date(appt.scheduledAt).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(appt.scheduledAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {appt.visitAddress && (
                     <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
@@ -232,7 +232,7 @@ export function ClientPortal({ userName }: { userName: string }) {
                 <div>
                   <p className="text-sm font-medium">{inv.invoiceNumber}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(inv.date).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {new Date(inv.date).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ export function ClientPortal({ userName }: { userName: string }) {
                     {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
                   </span>
                   <span className="text-sm font-semibold">
-                    ₡{parseFloat(inv.total).toLocaleString('es-CR')}
+                    ${parseFloat(inv.total).toLocaleString('es-CL')}
                   </span>
                 </div>
               </a>

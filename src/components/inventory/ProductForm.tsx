@@ -66,13 +66,13 @@ export function ProductForm({ productId }: { productId?: number }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Precio de venta (₡) *</label>
+          <label className="block text-sm font-medium mb-1">Precio de venta ($) *</label>
           <input type="number" step="0.01" {...register('unitPrice')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           {errors.unitPrice && <p className="text-red-500 text-xs mt-1">{errors.unitPrice.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Precio de costo (₡)</label>
+          <label className="block text-sm font-medium mb-1">Precio de costo ($)</label>
           <input type="number" step="0.01" {...register('costPrice')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
 

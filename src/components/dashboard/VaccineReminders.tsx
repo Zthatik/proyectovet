@@ -23,7 +23,7 @@ function getDaysUntil(dateStr: string): number {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export function VaccineReminders() {
