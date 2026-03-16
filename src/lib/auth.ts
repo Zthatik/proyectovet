@@ -5,9 +5,17 @@ import { users, sessions, accounts, verifications } from '../db/schema/users';
 
 const appUrl = process.env.BETTER_AUTH_URL || 'http://localhost:4321';
 
+// Orígenes de confianza: la URL configurada + cualquier subdominio de railway.app
+const trustedOrigins = [
+  appUrl,
+  'http://localhost:4321',
+  'http://localhost:4322',
+  ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',') ?? []),
+];
+
 export const auth = betterAuth({
   baseURL: appUrl,
-  trustedOrigins: [appUrl],
+  trustedOrigins,
   database: drizzleAdapter(db, {
     provider: 'mysql',
     schema: {
