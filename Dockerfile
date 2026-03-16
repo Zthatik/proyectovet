@@ -14,12 +14,10 @@ FROM node:22-slim AS runner
 
 WORKDIR /app
 
-# Solo dependencias de producción
-COPY package*.json ./
-RUN npm ci --omit=dev
-
-# Copiar el artefacto de build
-COPY --from=builder /app/dist ./dist
+# Copiar artefactos del builder (no reinstalar — evita conflictos de binarios)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist        ./dist
+COPY --from=builder /app/package.json ./package.json
 
 ENV HOST=0.0.0.0
 ENV PORT=4321
