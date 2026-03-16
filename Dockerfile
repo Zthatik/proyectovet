@@ -18,6 +18,11 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist        ./dist
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/src/db      ./src/db
+COPY --from=builder /app/start.sh    ./start.sh
+
+RUN chmod +x ./start.sh
 
 ENV HOST=0.0.0.0
 ENV PORT=4321
@@ -25,4 +30,4 @@ ENV NODE_ENV=production
 
 EXPOSE 4321
 
-CMD ["node", "./dist/server/entry.mjs"]
+CMD ["./start.sh"]
