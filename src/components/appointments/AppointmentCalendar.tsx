@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Clock, User, PawPrint, Stethoscope, FileText, MapPin, CalendarDays, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, X, Clock, User, PawPrint, Stethoscope, FileText, MapPin, Calendar } from 'lucide-react';
 
 interface Appointment {
   id: number;
@@ -17,18 +17,14 @@ interface Appointment {
   veterinarianName: string | null;
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; border: string; text: string; accent: string; dot: string }> = {
-  programada: { bg: 'bg-blue-50',   border: 'border-blue-200',  text: 'text-blue-900',  accent: 'bg-blue-500',  dot: 'bg-blue-500'  },
-  confirmada: { bg: 'bg-green-50',  border: 'border-green-200', text: 'text-green-900', accent: 'bg-green-500', dot: 'bg-green-500' },
-  en_camino:  { bg: 'bg-purple-50', border: 'border-purple-200',text: 'text-purple-900',accent: 'bg-purple-500',dot: 'bg-purple-500'},
-  en_curso:   { bg: 'bg-amber-50',  border: 'border-amber-200', text: 'text-amber-900', accent: 'bg-amber-500', dot: 'bg-amber-500' },
-  completada: { bg: 'bg-gray-50',   border: 'border-gray-200',  text: 'text-gray-600',  accent: 'bg-gray-400',  dot: 'bg-gray-400'  },
-  cancelada:  { bg: 'bg-red-50',    border: 'border-red-200',   text: 'text-red-800',   accent: 'bg-red-400',   dot: 'bg-red-400'   },
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  programada: 'Programada', confirmada: 'Confirmada', en_camino: 'En camino',
-  en_curso: 'En curso', completada: 'Completada', cancelada: 'Cancelada',
+// Solid colors — good contrast, white text
+const STATUS_COLOR: Record<string, { solid: string; light: string; label: string }> = {
+  programada: { solid: 'bg-blue-500',   light: 'bg-blue-50 text-blue-700 border-blue-200',   label: 'Programada' },
+  confirmada: { solid: 'bg-emerald-500',light: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Confirmada' },
+  en_camino:  { solid: 'bg-violet-500', light: 'bg-violet-50 text-violet-700 border-violet-200',label: 'En camino'  },
+  en_curso:   { solid: 'bg-amber-500',  light: 'bg-amber-50 text-amber-700 border-amber-200',  label: 'En curso'   },
+  completada: { solid: 'bg-slate-400',  light: 'bg-slate-50 text-slate-600 border-slate-200',  label: 'Completada' },
+  cancelada:  { solid: 'bg-rose-500',   light: 'bg-rose-50 text-rose-700 border-rose-200',     label: 'Cancelada'  },
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -36,216 +32,197 @@ const TYPE_LABEL: Record<string, string> = {
   control: 'Control', emergencia: 'Emergencia', desparasitacion: 'Desparasitación',
 };
 
-const TYPE_EMOJI: Record<string, string> = {
-  consulta: '🩺', vacunacion: '💉', cirugia: '🔬',
-  control: '📋', emergencia: '🚨', desparasitacion: '🐛',
-};
-
-const DAYS_SHORT  = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
+const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const GRID_START = 7 * 60;
 const GRID_END   = 21 * 60;
 const GRID_RANGE = GRID_END - GRID_START;
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 7);
+const HOURS      = Array.from({ length: 15 }, (_, i) => i + 7);
 
-function timeToMinutes(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
-function fmt(d: Date) { return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-function getWeekStart(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  d.setHours(0, 0, 0, 0);
-  return d;
+function toMin(d: Date) { return d.getHours() * 60 + d.getMinutes(); }
+function hhmm(d: Date)  { return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function getWeekStart(d: Date) {
+  const r = new Date(d);
+  const day = r.getDay();
+  r.setDate(r.getDate() + (day === 0 ? -6 : 1 - day));
+  r.setHours(0,0,0,0);
+  return r;
 }
-function addDays(date: Date, n: number): Date { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+function addDays(d: Date, n: number) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
 
 export function AppointmentCalendar() {
-  const [weekStart, setWeekStart]     = useState<Date>(() => getWeekStart(new Date()));
+  const [weekStart, setWeekStart]       = useState(() => getWeekStart(new Date()));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [selected, setSelected]       = useState<Appointment | null>(null);
-  const [nowPct, setNowPct]           = useState<number | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading]           = useState(true);
+  const [selected, setSelected]         = useState<Appointment | null>(null);
+  const [nowPct, setNowPct]             = useState<number | null>(null);
 
   useEffect(() => { fetchWeek(); }, [weekStart]);
 
   useEffect(() => {
-    function updateNow() {
-      const now = new Date();
-      const min = timeToMinutes(now);
-      if (min >= GRID_START && min <= GRID_END) {
-        setNowPct(((min - GRID_START) / GRID_RANGE) * 100);
-      } else {
-        setNowPct(null);
-      }
-    }
-    updateNow();
-    const id = setInterval(updateNow, 60_000);
+    const calc = () => {
+      const m = toMin(new Date());
+      setNowPct(m >= GRID_START && m <= GRID_END ? ((m - GRID_START) / GRID_RANGE) * 100 : null);
+    };
+    calc();
+    const id = setInterval(calc, 60_000);
     return () => clearInterval(id);
   }, []);
 
   async function fetchWeek() {
     setLoading(true);
-    const from = weekStart.toISOString();
-    const to   = addDays(weekStart, 7).toISOString();
-    const res  = await fetch(`/api/appointments?from=${from}&to=${to}`);
+    const res = await fetch(`/api/appointments?from=${weekStart.toISOString()}&to=${addDays(weekStart, 7).toISOString()}`);
     if (res.ok) setAppointments(await res.json());
     setLoading(false);
   }
 
-  function getAppointmentsForDay(dayIdx: number): Appointment[] {
-    const dayDate = addDays(weekStart, dayIdx);
+  function dayAppts(idx: number) {
+    const day = addDays(weekStart, idx);
     return appointments.filter(a => {
       const d = new Date(a.scheduledAt);
-      return d.getFullYear() === dayDate.getFullYear() &&
-             d.getMonth()     === dayDate.getMonth() &&
-             d.getDate()      === dayDate.getDate();
+      return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
     });
   }
 
   function blockStyle(a: Appointment) {
-    const startMin = Math.max(timeToMinutes(new Date(a.scheduledAt)), GRID_START) - GRID_START;
-    const endMin   = Math.min(timeToMinutes(new Date(a.endAt)),   GRID_END)   - GRID_START;
-    const top    = (startMin / GRID_RANGE) * 100;
-    const height = Math.max(((endMin - startMin) / GRID_RANGE) * 100, 1.8);
-    return { top: `${top}%`, height: `${height}%` };
+    const s = Math.max(toMin(new Date(a.scheduledAt)), GRID_START) - GRID_START;
+    const e = Math.min(toMin(new Date(a.endAt)),       GRID_END)   - GRID_START;
+    return { top: `${(s / GRID_RANGE) * 100}%`, height: `${Math.max(((e - s) / GRID_RANGE) * 100, 2.5)}%` };
   }
 
-  const today        = new Date();
+  const today         = new Date();
   const isCurrentWeek = getWeekStart(today).getTime() === weekStart.getTime();
-  const monthLabel   = weekStart.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  const monthLabel    = weekStart.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="space-y-3">
-      {/* ── Navigation bar ─────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+    <div className="flex flex-col gap-4">
+
+      {/* ── Toolbar ─────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center rounded-lg border border-border overflow-hidden">
           <button
             onClick={() => setWeekStart(d => addDays(d, -7))}
-            className="p-2 rounded-lg hover:bg-muted transition-colors border border-border/60"
+            className="px-3 py-2 hover:bg-muted transition-colors border-r border-border"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => setWeekStart(d => addDays(d, 7))}
-            className="p-2 rounded-lg hover:bg-muted transition-colors border border-border/60"
+            className="px-3 py-2 hover:bg-muted transition-colors"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        <span className="text-base font-semibold capitalize">{monthLabel}</span>
+        <h2 className="text-lg font-semibold capitalize">{monthLabel}</h2>
 
         {!isCurrentWeek && (
           <button
             onClick={() => setWeekStart(getWeekStart(new Date()))}
-            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border/60 hover:bg-muted transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
           >
-            <CalendarDays className="h-3.5 w-3.5" />
+            <Calendar className="h-3.5 w-3.5" />
             Hoy
           </button>
         )}
 
-        {loading && (
-          <span className="ml-auto text-xs text-muted-foreground animate-pulse">Cargando…</span>
-        )}
+        {loading && <span className="text-sm text-muted-foreground animate-pulse">Cargando…</span>}
       </div>
 
-      {/* ── Calendar grid ──────────────────────────────────── */}
-      <div className="rounded-xl border border-border/60 overflow-hidden shadow-sm">
+      {/* ── Grid ────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-border overflow-hidden bg-background shadow-sm">
 
         {/* Day headers */}
-        <div className="grid grid-cols-8 bg-muted/40 border-b border-border/60">
-          <div className="py-3 text-xs text-muted-foreground text-center border-r border-border/40 font-medium">
-            GMT-3
-          </div>
-          {DAYS_SHORT.map((d, i) => {
-            const colDate = addDays(weekStart, i);
-            const isToday = colDate.toDateString() === today.toDateString();
+        <div className="grid grid-cols-8 border-b border-border bg-muted/30">
+          <div className="py-3 border-r border-border" />
+          {DAYS.map((name, i) => {
+            const col     = addDays(weekStart, i);
+            const isToday = col.toDateString() === today.toDateString();
             return (
-              <div key={i} className={`py-3 text-center border-r last:border-r-0 border-border/40 ${isToday ? 'bg-primary/8' : ''}`}>
-                <p className={`text-xs uppercase tracking-wide font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {d}
+              <div key={i} className={`py-3 border-r last:border-r-0 border-border text-center ${isToday ? 'bg-primary/5' : ''}`}>
+                <p className={`text-xs font-medium uppercase tracking-widest ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {name}
                 </p>
-                <div className={`mx-auto mt-1 w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold transition-colors
-                  ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
-                  {colDate.getDate()}
+                <div className={`mx-auto mt-1.5 w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold
+                  ${isToday ? 'bg-primary text-white' : 'text-foreground'}`}>
+                  {col.getDate()}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Time grid */}
-        <div ref={gridRef} className="grid grid-cols-8 relative" style={{ height: '560px' }}>
+        {/* Time grid — scrollable */}
+        <div className="grid grid-cols-8 overflow-y-auto" style={{ height: '600px' }}>
 
-          {/* Hour labels column */}
-          <div className="border-r border-border/40 relative">
+          {/* Hour labels */}
+          <div className="border-r border-border relative col-span-1 bg-muted/10">
             {HOURS.map(h => (
               <div
                 key={h}
-                className="absolute w-full flex items-start justify-end pr-2"
-                style={{ top: `${((h * 60 - GRID_START) / GRID_RANGE) * 100}%` }}
+                className="absolute w-full flex items-center justify-center"
+                style={{ top: `${((h * 60 - GRID_START) / GRID_RANGE) * 100}%`, height: `${(60 / GRID_RANGE) * 100}%` }}
               >
-                <span className="text-[10px] text-muted-foreground/70 -mt-2 font-mono">
-                  {String(h).padStart(2, '0')}:00
+                <span className="text-xs font-mono text-muted-foreground select-none">
+                  {String(h).padStart(2,'0')}:00
                 </span>
               </div>
             ))}
           </div>
 
           {/* Day columns */}
-          {DAYS_SHORT.map((_, dayIdx) => {
-            const colDate  = addDays(weekStart, dayIdx);
-            const isToday  = colDate.toDateString() === today.toDateString();
-            const dayAppts = getAppointmentsForDay(dayIdx);
+          {DAYS.map((_, dayIdx) => {
+            const col     = addDays(weekStart, dayIdx);
+            const isToday = col.toDateString() === today.toDateString();
+            const appts   = dayAppts(dayIdx);
 
             return (
-              <div
-                key={dayIdx}
-                className={`relative border-r last:border-r-0 border-border/40 ${isToday ? 'bg-primary/[0.03]' : ''}`}
-              >
-                {/* Hour grid lines */}
+              <div key={dayIdx} className={`relative border-r last:border-r-0 border-border ${isToday ? 'bg-primary/[0.02]' : ''}`}>
+                {/* Hour lines */}
                 {HOURS.map(h => (
                   <div
                     key={h}
-                    className="absolute w-full border-t border-border/25"
+                    className="absolute w-full border-t border-border/30"
                     style={{ top: `${((h * 60 - GRID_START) / GRID_RANGE) * 100}%` }}
                   />
                 ))}
 
-                {/* Current time indicator */}
-                {isToday && nowPct !== null && (
+                {/* Half-hour lines */}
+                {HOURS.map(h => (
                   <div
-                    className="absolute inset-x-0 z-10 flex items-center pointer-events-none"
-                    style={{ top: `${nowPct}%` }}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 shrink-0" />
-                    <div className="flex-1 h-px bg-red-500" />
+                    key={`h${h}`}
+                    className="absolute w-full border-t border-dashed border-border/15"
+                    style={{ top: `${(((h * 60 + 30) - GRID_START) / GRID_RANGE) * 100}%` }}
+                  />
+                ))}
+
+                {/* Now indicator */}
+                {isToday && nowPct !== null && (
+                  <div className="absolute inset-x-0 z-20 flex items-center pointer-events-none" style={{ top: `${nowPct}%` }}>
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5 ring-2 ring-white shadow shrink-0" />
+                    <div className="flex-1 h-[2px] bg-red-500 shadow-sm" />
                   </div>
                 )}
 
-                {/* Appointments */}
-                {dayAppts.map(a => {
-                  const cfg = STATUS_CONFIG[a.status] ?? STATUS_CONFIG.programada;
+                {/* Appointment blocks */}
+                {appts.map(a => {
+                  const cfg = STATUS_COLOR[a.status] ?? STATUS_COLOR.programada;
                   return (
                     <button
                       key={a.id}
-                      className={`absolute inset-x-0.5 rounded-lg border ${cfg.bg} ${cfg.border} ${cfg.text}
-                        flex overflow-hidden text-left hover:brightness-95 hover:shadow-md transition-all cursor-pointer group`}
+                      className={`absolute inset-x-1 rounded-lg ${cfg.solid} text-white
+                        flex flex-col items-center justify-center text-center px-1 overflow-hidden
+                        hover:opacity-90 hover:shadow-lg active:scale-95 transition-all cursor-pointer z-10`}
                       style={blockStyle(a)}
                       onClick={() => setSelected(a)}
                     >
-                      {/* Left accent bar */}
-                      <div className={`w-1 shrink-0 rounded-l-lg ${cfg.accent}`} />
-                      <div className="flex-1 p-1 min-w-0">
-                        <p className="text-[10px] font-bold leading-tight truncate">
-                          {fmt(new Date(a.scheduledAt))}
-                        </p>
-                        <p className="text-[10px] leading-tight truncate opacity-80 mt-0.5">
-                          {TYPE_EMOJI[a.type] ?? ''} {a.patientName}
-                        </p>
-                      </div>
+                      <span className="text-[11px] font-bold leading-tight drop-shadow-sm">
+                        {hhmm(new Date(a.scheduledAt))}
+                      </span>
+                      {a.patientName && (
+                        <span className="text-[10px] leading-tight opacity-90 truncate w-full text-center mt-0.5">
+                          {a.patientName}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -256,138 +233,127 @@ export function AppointmentCalendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {Object.entries(STATUS_LABEL).map(([key, label]) => {
-          const cfg = STATUS_CONFIG[key];
-          return (
-            <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-              {label}
-            </div>
-          );
-        })}
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+        {Object.entries(STATUS_COLOR).map(([k, v]) => (
+          <div key={k} className="flex items-center gap-1.5">
+            <div className={`w-2.5 h-2.5 rounded-sm ${v.solid}`} />
+            <span className="text-xs text-muted-foreground">{v.label}</span>
+          </div>
+        ))}
       </div>
 
-      {/* ── Detail modal ────────────────────────────────────── */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setSelected(null)}
-        >
+      {/* ── Detail modal ─────────────────────────────────────── */}
+      {selected && (() => {
+        const cfg = STATUS_COLOR[selected.status] ?? STATUS_COLOR.programada;
+        return (
           <div
-            className="bg-card rounded-2xl border border-border/60 w-full max-w-sm shadow-2xl overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setSelected(null)}
           >
-            {/* Modal header with accent */}
-            {(() => {
-              const cfg = STATUS_CONFIG[selected.status] ?? STATUS_CONFIG.programada;
-              return (
-                <>
-                  <div className={`${cfg.bg} ${cfg.border} border-b px-5 py-4 flex items-start justify-between gap-2`}>
+            <div
+              className="bg-card w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden border border-border"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className={`${cfg.solid} px-5 py-4 text-white`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-medium opacity-80 uppercase tracking-wider">
+                      {TYPE_LABEL[selected.type] ?? selected.type}
+                    </p>
+                    <h3 className="text-lg font-bold mt-0.5">
+                      {selected.patientName ?? 'Sin paciente'}
+                    </h3>
+                    <span className="inline-block mt-1 text-xs bg-white/20 rounded-full px-2.5 py-0.5 font-medium">
+                      {cfg.label}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="px-5 py-4 space-y-3 text-sm">
+                <Row icon={<Clock className="h-4 w-4 text-muted-foreground" />}>
+                  <div>
+                    <p className="font-medium capitalize">
+                      {new Date(selected.scheduledAt).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      {hhmm(new Date(selected.scheduledAt))} – {hhmm(new Date(selected.endAt))}
+                    </p>
+                  </div>
+                </Row>
+
+                {selected.patientName && (
+                  <Row icon={<PawPrint className="h-4 w-4 text-muted-foreground" />}>
+                    <span>
+                      {selected.patientName}
+                      {selected.patientSpecies && <span className="text-muted-foreground text-xs ml-1">({selected.patientSpecies})</span>}
+                    </span>
+                  </Row>
+                )}
+
+                {(selected.ownerFirstName || selected.ownerLastName) && (
+                  <Row icon={<User className="h-4 w-4 text-muted-foreground" />}>
+                    <span>{[selected.ownerFirstName, selected.ownerLastName].filter(Boolean).join(' ')}</span>
+                  </Row>
+                )}
+
+                {selected.veterinarianName && (
+                  <Row icon={<Stethoscope className="h-4 w-4 text-muted-foreground" />}>
+                    <span>{selected.veterinarianName}</span>
+                  </Row>
+                )}
+
+                {selected.visitAddress && (
+                  <Row icon={<MapPin className="h-4 w-4 text-muted-foreground" />}>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{TYPE_EMOJI[selected.type] ?? '📅'}</span>
-                        <h3 className={`font-bold text-base ${cfg.text}`}>
-                          {TYPE_LABEL[selected.type] ?? selected.type}
-                        </h3>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 mt-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium ${cfg.bg} ${cfg.border} border ${cfg.text}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                        {STATUS_LABEL[selected.status] ?? selected.status}
-                      </span>
+                      <p className="text-muted-foreground">{selected.visitAddress}</p>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.visitAddress)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        Ver en Google Maps ↗
+                      </a>
                     </div>
-                    <button
-                      onClick={() => setSelected(null)}
-                      className="p-1.5 rounded-lg hover:bg-black/10 transition-colors shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  </Row>
+                )}
 
-                  <div className="px-5 py-4 space-y-3">
-                    <InfoRow icon={<Clock className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                      <div>
-                        <p className="text-sm font-medium capitalize">
-                          {new Date(selected.scheduledAt).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {fmt(new Date(selected.scheduledAt))} – {fmt(new Date(selected.endAt))}
-                        </p>
-                      </div>
-                    </InfoRow>
+                {selected.reason && (
+                  <Row icon={<FileText className="h-4 w-4 text-muted-foreground" />}>
+                    <span className="text-muted-foreground">{selected.reason}</span>
+                  </Row>
+                )}
+              </div>
 
-                    {selected.patientName && (
-                      <InfoRow icon={<PawPrint className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                        <span className="text-sm">
-                          {selected.patientName}
-                          {selected.patientSpecies && (
-                            <span className="text-muted-foreground ml-1 text-xs">({selected.patientSpecies})</span>
-                          )}
-                        </span>
-                      </InfoRow>
-                    )}
-
-                    {(selected.ownerFirstName || selected.ownerLastName) && (
-                      <InfoRow icon={<User className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                        <span className="text-sm">
-                          {[selected.ownerFirstName, selected.ownerLastName].filter(Boolean).join(' ')}
-                        </span>
-                      </InfoRow>
-                    )}
-
-                    {selected.veterinarianName && (
-                      <InfoRow icon={<Stethoscope className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                        <span className="text-sm">{selected.veterinarianName}</span>
-                      </InfoRow>
-                    )}
-
-                    {selected.visitAddress && (
-                      <InfoRow icon={<MapPin className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                        <div>
-                          <p className="text-sm text-muted-foreground">{selected.visitAddress}</p>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.visitAddress)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            Ver en Google Maps ↗
-                          </a>
-                        </div>
-                      </InfoRow>
-                    )}
-
-                    {selected.reason && (
-                      <InfoRow icon={<FileText className="h-4 w-4 text-muted-foreground shrink-0" />}>
-                        <span className="text-sm text-muted-foreground">{selected.reason}</span>
-                      </InfoRow>
-                    )}
-                  </div>
-
-                  <div className="px-5 pb-5">
-                    <a
-                      href={`/citas/${selected.id}`}
-                      className="block w-full text-center px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
-                    >
-                      Ver cita completa →
-                    </a>
-                  </div>
-                </>
-              );
-            })()}
+              <div className="px-5 pb-5">
+                <a
+                  href={`/citas/${selected.id}`}
+                  className={`block w-full text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 ${cfg.solid}`}
+                >
+                  Ver cita completa →
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
 
-function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function Row({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="mt-0.5">{icon}</div>
+      <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
