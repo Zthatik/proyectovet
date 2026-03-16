@@ -3,7 +3,11 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
 import { users, sessions, accounts, verifications } from '../db/schema/users';
 
+const appUrl = process.env.BETTER_AUTH_URL || 'http://localhost:4321';
+
 export const auth = betterAuth({
+  baseURL: appUrl,
+  trustedOrigins: [appUrl],
   database: drizzleAdapter(db, {
     provider: 'mysql',
     schema: {
