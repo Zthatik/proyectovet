@@ -1,0 +1,16 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { InvoiceForm } from '../../components/billing/InvoiceForm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+---
+
+<DashboardLayout title="Nueva Factura" pageTitle="Nueva Factura">
+  <div class="mb-6">
+    <a href="/facturacion" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Facturación</a>
+  </div>
+  <div class="rounded-xl border bg-card p-6">
+    <InvoiceForm client:load />
+  </div>
+</DashboardLayout>

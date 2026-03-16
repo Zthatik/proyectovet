@@ -1,0 +1,70 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { UserList } from '../../components/admin/UserList';
+import { db } from '../../db';
+import { users } from '../../db/schema/users';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+if (user.role !== 'admin') return Astro.redirect('/dashboard');
+
+const allUsers = await db.select({
+  id: users.id,
+  name: users.name,
+  email: users.email,
+  role: users.role,
+}).from(users);
+---
+
+<DashboardLayout title="Configuración" pageTitle="Configuración">
+  <div class="space-y-6 max-w-4xl">
+
+    <!-- Resumen del sistema -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="rounded-xl border bg-card p-4">
+        <p class="text-sm text-muted-foreground">Total usuarios</p>
+        <p class="text-2xl font-bold mt-1">{allUsers.length}</p>
+      </div>
+      <div class="rounded-xl border bg-card p-4">
+        <p class="text-sm text-muted-foreground">Veterinarios</p>
+        <p class="text-2xl font-bold mt-1">{allUsers.filter(u => u.role === 'veterinario').length}</p>
+      </div>
+      <div class="rounded-xl border bg-card p-4">
+        <p class="text-sm text-muted-foreground">Clientes</p>
+        <p class="text-2xl font-bold mt-1">{allUsers.filter(u => u.role === 'cliente').length}</p>
+      </div>
+    </div>
+
+    <!-- Gestión de usuarios -->
+    <div class="rounded-xl border bg-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Usuarios del Sistema</h2>
+        <p class="text-xs text-muted-foreground">Haz clic en el lápiz para editar rol o nombre</p>
+      </div>
+      <UserList client:load currentUserId={user.id} />
+    </div>
+
+    <!-- Info del sistema -->
+    <div class="rounded-xl border bg-card p-6">
+      <h2 class="text-lg font-semibold mb-4">Información del Sistema</h2>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between border-b pb-2">
+          <dt class="text-muted-foreground">Sistema</dt>
+          <dd class="font-medium">VetClinic v1.0</dd>
+        </div>
+        <div class="flex justify-between border-b pb-2">
+          <dt class="text-muted-foreground">Framework</dt>
+          <dd>Astro 6 + React 19</dd>
+        </div>
+        <div class="flex justify-between border-b pb-2">
+          <dt class="text-muted-foreground">Base de datos</dt>
+          <dd>MySQL 8 (Docker)</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-muted-foreground">Autenticación</dt>
+          <dd>Better Auth</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</DashboardLayout>

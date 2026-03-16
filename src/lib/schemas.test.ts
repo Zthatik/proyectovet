@@ -1,0 +1,322 @@
+import { describe, it, expect } from 'vitest';
+import {
+  ownerFormSchema,
+  patientFormSchema,
+  appointmentSchema,
+  productSchema,
+  invoiceSchema,
+  medicalRecordSchema,
+  prescriptionSchema,
+  stockMovementSchema,
+} from './schemas';
+
+// ── ownerFormSchema ───────────────────────────────────────────────────────────
+describe('ownerFormSchema', () => {
+  it('acepta datos válidos', () => {
+    const result = ownerFormSchema.safeParse({
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      email: 'juan@example.com',
+      phone: '+506 8888-8888',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('requiere firstName', () => {
+    const result = ownerFormSchema.safeParse({ firstName: '', lastName: 'Pérez' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('firstName');
+  });
+
+  it('requiere lastName', () => {
+    const result = ownerFormSchema.safeParse({ firstName: 'Juan', lastName: '' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('lastName');
+  });
+
+  it('rechaza email inválido', () => {
+    const result = ownerFormSchema.safeParse({
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      email: 'no-es-email',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('acepta email vacío (opcional)', () => {
+    const result = ownerFormSchema.safeParse({
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      email: '',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza firstName mayor a 100 caracteres', () => {
+    const result = ownerFormSchema.safeParse({
+      firstName: 'A'.repeat(101),
+      lastName: 'Pérez',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── patientFormSchema ─────────────────────────────────────────────────────────
+describe('patientFormSchema', () => {
+  const valid = {
+    ownerId: '1',
+    name: 'Luna',
+    species: 'perro' as const,
+    sex: 'hembra' as const,
+  };
+
+  it('acepta datos válidos', () => {
+    expect(patientFormSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('requiere ownerId', () => {
+    const result = patientFormSchema.safeParse({ ...valid, ownerId: '' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('ownerId');
+  });
+
+  it('requiere name', () => {
+    const result = patientFormSchema.safeParse({ ...valid, name: '' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('name');
+  });
+
+  it('rechaza species inválida', () => {
+    const result = patientFormSchema.safeParse({ ...valid, species: 'dragon' });
+    expect(result.success).toBe(false);
+  });
+
+  it('acepta todas las species válidas', () => {
+    const species = ['perro', 'gato', 'ave', 'reptil', 'roedor', 'otro'] as const;
+    for (const s of species) {
+      expect(patientFormSchema.safeParse({ ...valid, species: s }).success).toBe(true);
+    }
+  });
+
+  it('rechaza sex inválido', () => {
+    const result = patientFormSchema.safeParse({ ...valid, sex: 'neutro' });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── appointmentSchema (API) ───────────────────────────────────────────────────
+describe('appointmentSchema', () => {
+  const base = {
+    patientId: 1,
+    ownerId: 1,
+    veterinarianId: 'vet-1',
+    scheduledAt: '2026-03-15T10:00:00',
+    endAt: '2026-03-15T11:00:00',
+    type: 'consulta' as const,
+  };
+
+  it('acepta cita válida', () => {
+    expect(appointmentSchema.safeParse(base).success).toBe(true);
+  });
+
+  it('falla si endAt es anterior a scheduledAt', () => {
+    const result = appointmentSchema.safeParse({
+      ...base,
+      scheduledAt: '2026-03-15T11:00:00',
+      endAt: '2026-03-15T10:00:00',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('endAt');
+  });
+
+  it('falla si endAt es igual a scheduledAt', () => {
+    const result = appointmentSchema.safeParse({
+      ...base,
+      scheduledAt: '2026-03-15T10:00:00',
+      endAt: '2026-03-15T10:00:00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza tipo inválido', () => {
+    const result = appointmentSchema.safeParse({ ...base, type: 'paseo' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza patientId = 0', () => {
+    const result = appointmentSchema.safeParse({ ...base, patientId: 0 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza veterinarianId vacío', () => {
+    const result = appointmentSchema.safeParse({ ...base, veterinarianId: '' });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── productSchema ─────────────────────────────────────────────────────────────
+describe('productSchema', () => {
+  const valid = {
+    name: 'Amoxicilina 500mg',
+    category: 'medicamento' as const,
+    unitPrice: 5500,
+  };
+
+  it('acepta producto válido', () => {
+    expect(productSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('requiere name', () => {
+    const result = productSchema.safeParse({ ...valid, name: '' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza precio negativo', () => {
+    const result = productSchema.safeParse({ ...valid, unitPrice: -100 });
+    expect(result.success).toBe(false);
+  });
+
+  it('acepta precio cero', () => {
+    expect(productSchema.safeParse({ ...valid, unitPrice: 0 }).success).toBe(true);
+  });
+
+  it('rechaza stock negativo', () => {
+    const result = productSchema.safeParse({ ...valid, stock: -5 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza categoría inválida', () => {
+    const result = productSchema.safeParse({ ...valid, category: 'comida_rapida' });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── medicalRecordSchema ───────────────────────────────────────────────────────
+describe('medicalRecordSchema', () => {
+  const valid = {
+    patientId: 1,
+    veterinarianId: 'vet-1',
+    date: '2026-03-15',
+    reason: 'Revisión general',
+  };
+
+  it('acepta registro médico válido', () => {
+    expect(medicalRecordSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('requiere reason', () => {
+    const result = medicalRecordSchema.safeParse({ ...valid, reason: '' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('reason');
+  });
+
+  it('rechaza reason mayor a 500 caracteres', () => {
+    const result = medicalRecordSchema.safeParse({ ...valid, reason: 'A'.repeat(501) });
+    expect(result.success).toBe(false);
+  });
+
+  it('requiere patientId positivo', () => {
+    const result = medicalRecordSchema.safeParse({ ...valid, patientId: 0 });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── invoiceSchema ─────────────────────────────────────────────────────────────
+describe('invoiceSchema', () => {
+  const validItem = { description: 'Consulta general', quantity: 1, unitPrice: 15000 };
+  const valid = { ownerId: 1, items: [validItem] };
+
+  it('acepta factura válida', () => {
+    expect(invoiceSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('requiere al menos un item', () => {
+    const result = invoiceSchema.safeParse({ ...valid, items: [] });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toContain('items');
+  });
+
+  it('rechaza taxRate mayor a 100', () => {
+    const result = invoiceSchema.safeParse({ ...valid, taxRate: 101 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza taxRate negativo', () => {
+    const result = invoiceSchema.safeParse({ ...valid, taxRate: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza item sin descripción', () => {
+    const result = invoiceSchema.safeParse({
+      ...valid,
+      items: [{ description: '', quantity: 1, unitPrice: 100 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza item con cantidad negativa', () => {
+    const result = invoiceSchema.safeParse({
+      ...valid,
+      items: [{ ...validItem, quantity: -1 }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── prescriptionSchema ────────────────────────────────────────────────────────
+describe('prescriptionSchema', () => {
+  const validItem = { medicationName: 'Amoxicilina 500mg' };
+  const valid = {
+    patientId: 1,
+    veterinarianId: 'vet-1',
+    date: '2026-03-15',
+    items: [validItem],
+  };
+
+  it('acepta receta válida', () => {
+    expect(prescriptionSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('requiere al menos un medicamento', () => {
+    const result = prescriptionSchema.safeParse({ ...valid, items: [] });
+    expect(result.success).toBe(false);
+  });
+
+  it('requiere nombre del medicamento', () => {
+    const result = prescriptionSchema.safeParse({
+      ...valid,
+      items: [{ medicationName: '' }],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── stockMovementSchema ───────────────────────────────────────────────────────
+describe('stockMovementSchema', () => {
+  it('acepta movimiento de entrada válido', () => {
+    const result = stockMovementSchema.safeParse({
+      productId: 1,
+      type: 'entrada',
+      quantity: 10,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza cantidad cero', () => {
+    const result = stockMovementSchema.safeParse({
+      productId: 1,
+      type: 'entrada',
+      quantity: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza tipo inválido', () => {
+    const result = stockMovementSchema.safeParse({
+      productId: 1,
+      type: 'robo',
+      quantity: 5,
+    });
+    expect(result.success).toBe(false);
+  });
+});

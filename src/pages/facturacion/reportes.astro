@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { ReportsCharts } from '../../components/reports/ReportsCharts';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+if (user.role !== 'admin' && user.role !== 'recepcionista') return Astro.redirect('/dashboard');
+---
+
+<DashboardLayout title="Reportes Financieros" pageTitle="Reportes Financieros">
+  <div class="mb-4">
+    <a href="/facturacion" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Facturación</a>
+  </div>
+  <ReportsCharts client:load />
+</DashboardLayout>

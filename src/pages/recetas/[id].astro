@@ -1,0 +1,112 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { db } from '../../db';
+import { prescriptions, prescriptionItems } from '../../db/schema/prescriptions';
+import { patients, owners } from '../../db/schema/patients';
+import { users } from '../../db/schema/users';
+import { eq } from 'drizzle-orm';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [rx] = await db
+  .select({
+    id: prescriptions.id, date: prescriptions.date, status: prescriptions.status, notes: prescriptions.notes,
+    patientId: prescriptions.patientId, patientName: patients.name, patientSpecies: patients.species,
+    ownerFirstName: owners.firstName, ownerLastName: owners.lastName, ownerPhone: owners.phone,
+    veterinarianName: users.name,
+  })
+  .from(prescriptions)
+  .leftJoin(patients, eq(prescriptions.patientId, patients.id))
+  .leftJoin(owners, eq(patients.ownerId, owners.id))
+  .leftJoin(users, eq(prescriptions.veterinarianId, users.id))
+  .where(eq(prescriptions.id, id));
+
+if (!rx) return Astro.redirect('/recetas');
+
+const items = await db.select().from(prescriptionItems).where(eq(prescriptionItems.prescriptionId, id));
+
+const statusColors: Record<string, string> = {
+  activa: 'bg-green-100 text-green-700',
+  completada: 'bg-gray-100 text-gray-600',
+  cancelada: 'bg-red-100 text-red-700',
+};
+---
+
+<DashboardLayout title="Receta Médica" pageTitle="Receta Médica">
+  <div class="mb-4">
+    <a href="/recetas" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Recetas</a>
+  </div>
+
+  <div class="max-w-2xl space-y-4">
+    <div class="rounded-xl border bg-card p-6">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-bold">Receta #{rx.id}</h2>
+          <p class="text-sm text-muted-foreground">{format(new Date(rx.date), "dd 'de' MMMM yyyy", { locale: es })}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusColors[rx.status] || 'bg-gray-100'}`}>
+            {rx.status}
+          </span>
+          <a href={`/api/prescriptions/${rx.id}/pdf`} target="_blank"
+            class="flex items-center gap-1.5 text-sm px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors">
+            📄 PDF
+          </a>
+        </div>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-3 text-sm mb-6">
+        <div>
+          <dt class="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Paciente</dt>
+          <dd class="font-medium">
+            <a href={`/pacientes/${rx.patientId}`} class="text-primary hover:underline">{rx.patientName}</a>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Dueño</dt>
+          <dd>{rx.ownerFirstName} {rx.ownerLastName}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Veterinario</dt>
+          <dd>{rx.veterinarianName}</dd>
+        </div>
+        {rx.ownerPhone && (
+          <div>
+            <dt class="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Teléfono</dt>
+            <dd>{rx.ownerPhone}</dd>
+          </div>
+        )}
+      </dl>
+
+      <h3 class="font-semibold mb-3">Medicamentos</h3>
+      <div class="space-y-3">
+        {items.map((item, i) => (
+          <div class="border rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{i + 1}</span>
+              <span class="font-semibold">{item.medicationName}</span>
+              {item.quantity && <span class="text-xs text-muted-foreground ml-auto">Cantidad: {item.quantity}</span>}
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+              {item.dosage && <div><dt class="text-xs text-muted-foreground">Dosis</dt><dd>{item.dosage}</dd></div>}
+              {item.frequency && <div><dt class="text-xs text-muted-foreground">Frecuencia</dt><dd>{item.frequency}</dd></div>}
+              {item.duration && <div><dt class="text-xs text-muted-foreground">Duración</dt><dd>{item.duration}</dd></div>}
+              {item.instructions && <div class="sm:col-span-3"><dt class="text-xs text-muted-foreground">Instrucciones</dt><dd>{item.instructions}</dd></div>}
+            </dl>
+          </div>
+        ))}
+      </div>
+
+      {rx.notes && (
+        <div class="mt-4 p-3 bg-muted/30 rounded-lg text-sm">
+          <p class="text-xs text-muted-foreground mb-1">Notas</p>
+          <p>{rx.notes}</p>
+        </div>
+      )}
+    </div>
+  </div>
+</DashboardLayout>

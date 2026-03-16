@@ -1,0 +1,70 @@
+import type { APIRoute } from 'astro';
+import { db } from '../../../db';
+import { patients, owners } from '../../../db/schema/patients';
+import { medicalRecords, vaccines } from '../../../db/schema/medical';
+import { appointments } from '../../../db/schema/appointments';
+import { eq, desc } from 'drizzle-orm';
+
+export const GET: APIRoute = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+
+  const id = Number(params.id);
+  const [patient] = await db
+    .select({
+      id: patients.id,
+      name: patients.name,
+      species: patients.species,
+      breed: patients.breed,
+      color: patients.color,
+      sex: patients.sex,
+      dateOfBirth: patients.dateOfBirth,
+      weight: patients.weight,
+      microchipNumber: patients.microchipNumber,
+      notes: patients.notes,
+      isActive: patients.isActive,
+      ownerId: patients.ownerId,
+      ownerFirstName: owners.firstName,
+      ownerLastName: owners.lastName,
+      ownerEmail: owners.email,
+      ownerPhone: owners.phone,
+    })
+    .from(patients)
+    .leftJoin(owners, eq(patients.ownerId, owners.id))
+    .where(eq(patients.id, id));
+
+  if (!patient) return new Response(JSON.stringify({ error: 'No encontrado' }), { status: 404 });
+
+  const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, id)).orderBy(desc(medicalRecords.date)).limit(5);
+  const patientVaccines = await db.select().from(vaccines).where(eq(vaccines.patientId, id)).orderBy(desc(vaccines.applicationDate));
+  const patientAppointments = await db.select().from(appointments).where(eq(appointments.patientId, id)).orderBy(desc(appointments.scheduledAt)).limit(5);
+
+  return new Response(JSON.stringify({ ...patient, medicalRecords: records, vaccines: patientVaccines, appointments: patientAppointments }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const PUT: APIRoute = async ({ params, request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+
+  const id = Number(params.id);
+  const body = await request.json();
+  const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive } = body;
+
+  await db.update(patients).set({ name, species, breed, color, sex, dateOfBirth: dateOfBirth || null, weight: weight || null, microchipNumber, notes, isActive }).where(eq(patients.id, id));
+  const [updated] = await db.select().from(patients).where(eq(patients.id, id));
+  return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
+};
+
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  if (user.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
+  }
+
+  const id = Number(params.id);
+  await db.update(patients).set({ isActive: false }).where(eq(patients.id, id));
+  return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+};

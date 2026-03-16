@@ -1,0 +1,11 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { ProductList } from '../../components/inventory/ProductList';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+---
+
+<DashboardLayout title="Inventario" pageTitle="Inventario">
+  <ProductList client:load />
+</DashboardLayout>

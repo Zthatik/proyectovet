@@ -1,0 +1,139 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { VaccineSection } from '../../components/patients/VaccineSection';
+import { db } from '../../db';
+import { patients, owners } from '../../db/schema/patients';
+import { medicalRecords } from '../../db/schema/medical';
+import { appointments } from '../../db/schema/appointments';
+import { eq, desc } from 'drizzle-orm';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [patient] = await db
+  .select({
+    id: patients.id, name: patients.name, species: patients.species,
+    breed: patients.breed, color: patients.color, sex: patients.sex,
+    dateOfBirth: patients.dateOfBirth, weight: patients.weight,
+    microchipNumber: patients.microchipNumber, notes: patients.notes,
+    isActive: patients.isActive, ownerId: patients.ownerId,
+    ownerFirstName: owners.firstName, ownerLastName: owners.lastName,
+    ownerEmail: owners.email, ownerPhone: owners.phone,
+  })
+  .from(patients)
+  .leftJoin(owners, eq(patients.ownerId, owners.id))
+  .where(eq(patients.id, id));
+
+if (!patient) return Astro.redirect('/pacientes');
+
+const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, id)).orderBy(desc(medicalRecords.date)).limit(5);
+const appts = await db.select().from(appointments).where(eq(appointments.patientId, id)).orderBy(desc(appointments.scheduledAt)).limit(5);
+
+const canEdit = user.role === 'admin' || user.role === 'veterinario';
+const speciesEmoji: Record<string, string> = { perro: '🐕', gato: '🐈', ave: '🐦', reptil: '🦎', roedor: '🐭', otro: '🐾' };
+const typeLabels: Record<string, string> = {
+  consulta: 'Consulta', vacunacion: 'Vacunación', cirugia: 'Cirugía',
+  control: 'Control', emergencia: 'Emergencia', grooming: 'Grooming',
+};
+---
+
+<DashboardLayout title={patient.name} pageTitle={`Paciente: ${patient.name}`}>
+  <div class="mb-4">
+    <a href="/pacientes" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Pacientes</a>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Info principal -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="rounded-xl border bg-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-4xl">{speciesEmoji[patient.species] || '🐾'}</div>
+          <span class={`px-2 py-1 rounded-full text-xs font-medium ${patient.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {patient.isActive ? 'Activo' : 'Inactivo'}
+          </span>
+        </div>
+        <h2 class="text-xl font-bold">{patient.name}</h2>
+        <p class="text-muted-foreground capitalize text-sm">{patient.species}{patient.breed ? ` · ${patient.breed}` : ''}</p>
+
+        <dl class="mt-4 space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-muted-foreground">Sexo</dt><dd class="capitalize">{patient.sex}</dd></div>
+          {patient.color && <div class="flex justify-between"><dt class="text-muted-foreground">Color</dt><dd>{patient.color}</dd></div>}
+          {patient.weight && <div class="flex justify-between"><dt class="text-muted-foreground">Peso</dt><dd>{patient.weight} kg</dd></div>}
+          {patient.dateOfBirth && <div class="flex justify-between"><dt class="text-muted-foreground">Nacimiento</dt><dd>{format(new Date(patient.dateOfBirth), 'dd/MM/yyyy', { locale: es })}</dd></div>}
+          {patient.microchipNumber && <div class="flex justify-between"><dt class="text-muted-foreground">Microchip</dt><dd class="font-mono text-xs">{patient.microchipNumber}</dd></div>}
+        </dl>
+
+        <div class="mt-4 flex gap-2">
+          <a href={`/pacientes/${id}/editar`} class="flex-1 text-center text-sm px-3 py-2 rounded-lg border hover:bg-muted transition-colors">Editar</a>
+          <a href={`/citas/nueva?patientId=${id}`} class="flex-1 text-center text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Nueva Cita</a>
+        </div>
+      </div>
+
+      <!-- Dueño -->
+      <div class="rounded-xl border bg-card p-6">
+        <h3 class="font-semibold mb-3">Dueño</h3>
+        <p class="font-medium">{patient.ownerFirstName} {patient.ownerLastName}</p>
+        {patient.ownerPhone && <p class="text-sm text-muted-foreground">{patient.ownerPhone}</p>}
+        {patient.ownerEmail && <p class="text-sm text-muted-foreground">{patient.ownerEmail}</p>}
+      </div>
+
+      {patient.notes && (
+        <div class="rounded-xl border bg-card p-6">
+          <h3 class="font-semibold mb-2">Notas</h3>
+          <p class="text-sm text-muted-foreground">{patient.notes}</p>
+        </div>
+      )}
+    </div>
+
+    <!-- Historial -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="rounded-xl border bg-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">Historial Médico</h3>
+          <a href={`/historial/nuevo?patientId=${id}`} class="text-xs text-primary hover:underline">+ Nuevo registro</a>
+        </div>
+        {records.length === 0 ? (
+          <p class="text-sm text-muted-foreground">Sin registros médicos.</p>
+        ) : (
+          <div class="space-y-2">
+            {records.map((r) => (
+              <a href={`/historial/${r.id}`} class="block border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-medium text-sm">{r.reason}</span>
+                  <span class="text-xs text-muted-foreground">{format(new Date(r.date), 'dd/MM/yyyy', { locale: es })}</span>
+                </div>
+                {r.diagnosis && <p class="text-sm text-muted-foreground line-clamp-1">{r.diagnosis}</p>}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="rounded-xl border bg-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">Próximas Citas</h3>
+          <a href={`/citas/nueva?patientId=${id}`} class="text-xs text-primary hover:underline">+ Nueva cita</a>
+        </div>
+        {appts.length === 0 ? (
+          <p class="text-sm text-muted-foreground">Sin citas registradas.</p>
+        ) : (
+          <div class="space-y-2">
+            {appts.map((a) => (
+              <a href={`/citas/${a.id}`} class="flex items-center justify-between border rounded-lg p-3 hover:bg-muted/30 transition-colors">
+                <div>
+                  <span class="text-sm font-medium">{typeLabels[a.type] || a.type}</span>
+                  {a.reason && <span class="text-xs text-muted-foreground ml-2">· {a.reason}</span>}
+                </div>
+                <span class="text-xs text-muted-foreground">{format(new Date(a.scheduledAt), 'dd/MM/yyyy HH:mm', { locale: es })}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+      <VaccineSection client:load patientId={id} canEdit={canEdit} />
+    </div>
+  </div>
+</DashboardLayout>

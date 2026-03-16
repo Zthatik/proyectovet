@@ -1,0 +1,17 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { ProductForm } from '../../components/inventory/ProductForm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+---
+
+<DashboardLayout title="Nuevo Producto" pageTitle="Registrar Producto">
+  <div class="mb-6">
+    <a href="/inventario" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Inventario</a>
+  </div>
+  <div class="rounded-xl border bg-card p-6">
+    <h2 class="text-lg font-semibold mb-6">Datos del Producto</h2>
+    <ProductForm client:load />
+  </div>
+</DashboardLayout>

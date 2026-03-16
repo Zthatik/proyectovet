@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { LabOrderList } from '../../components/lab-orders/LabOrderList';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const canWrite = user.role === 'admin' || user.role === 'veterinario';
+---
+
+<DashboardLayout title="Órdenes de Laboratorio" pageTitle="Órdenes de Laboratorio">
+  <p class="text-sm text-muted-foreground mb-6">Gestión de exámenes y análisis clínicos</p>
+  <LabOrderList client:load canWrite={canWrite} />
+</DashboardLayout>

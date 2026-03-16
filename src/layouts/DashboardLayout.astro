@@ -1,0 +1,33 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { DashboardShell } from '../components/layout/DashboardShell';
+import { getNavItems } from '../lib/permissions';
+
+interface Props {
+  title: string;
+  pageTitle?: string;
+}
+
+const { title, pageTitle } = Astro.props;
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+const navItems = getNavItems(user.role as any);
+const currentPath = Astro.url.pathname;
+---
+
+<BaseLayout title={title}>
+  <DashboardShell
+    client:load
+    navItems={navItems}
+    currentPath={currentPath}
+    pageTitle={pageTitle || title}
+    userName={user.name}
+    userRole={user.role}
+  >
+    <slot />
+  </DashboardShell>
+</BaseLayout>

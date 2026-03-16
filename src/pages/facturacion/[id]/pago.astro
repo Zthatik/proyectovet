@@ -1,0 +1,29 @@
+---
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { PaymentForm } from '../../../components/billing/PaymentForm';
+import { db } from '../../../db';
+import { invoices } from '../../../db/schema/billing';
+import { eq } from 'drizzle-orm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+if (!invoice) return Astro.redirect('/facturacion');
+
+const pending = parseFloat(invoice.total);
+---
+
+<DashboardLayout title="Registrar Pago" pageTitle="Registrar Pago">
+  <div class="mb-6">
+    <a href={`/facturacion/${id}`} class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a la Factura</a>
+  </div>
+  <div class="rounded-xl border bg-card p-6 max-w-md">
+    <div class="mb-4">
+      <p class="text-sm text-muted-foreground">Factura: <span class="font-mono font-medium">{invoice.invoiceNumber}</span></p>
+      <p class="text-2xl font-bold mt-1">₡{pending.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</p>
+    </div>
+    <PaymentForm client:load invoiceId={id} total={pending} />
+  </div>
+</DashboardLayout>

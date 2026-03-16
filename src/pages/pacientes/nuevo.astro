@@ -1,0 +1,21 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { PatientForm } from '../../components/patients/PatientForm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const ownerId = Astro.url.searchParams.get('ownerId');
+---
+
+<DashboardLayout title="Nuevo Paciente" pageTitle="Registrar Paciente">
+  <div class="mb-6">
+    <a href="/pacientes" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+      ← Volver a Pacientes
+    </a>
+  </div>
+  <div class="rounded-xl border bg-card p-6">
+    <h2 class="text-lg font-semibold mb-6">Datos del Paciente</h2>
+    <PatientForm client:load defaultOwnerId={ownerId ? Number(ownerId) : undefined} />
+  </div>
+</DashboardLayout>

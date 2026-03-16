@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { ProductForm } from '../../../components/inventory/ProductForm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+---
+
+<DashboardLayout title="Editar Producto" pageTitle="Editar Producto">
+  <div class="mb-6">
+    <a href={`/inventario/${id}`} class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver al Producto</a>
+  </div>
+  <div class="rounded-xl border bg-card p-6">
+    <ProductForm client:load productId={id} />
+  </div>
+</DashboardLayout>

@@ -1,0 +1,11 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { AppointmentsPage } from '../../components/appointments/AppointmentsPage';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+---
+
+<DashboardLayout title="Citas" pageTitle="Citas">
+  <AppointmentsPage client:load />
+</DashboardLayout>

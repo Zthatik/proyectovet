@@ -1,0 +1,14 @@
+---
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { LoginForm } from '../components/auth/LoginForm';
+
+// Redirect if already logged in
+if (Astro.locals.user) {
+  return Astro.redirect('/dashboard');
+}
+---
+
+<AuthLayout title="Iniciar Sesion">
+  <h2 class="text-xl font-semibold text-center mb-6">Iniciar Sesion</h2>
+  <LoginForm client:load />
+</AuthLayout>

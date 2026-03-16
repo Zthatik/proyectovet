@@ -1,0 +1,11 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { PrescriptionList } from '../../components/prescriptions/PrescriptionList';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+---
+
+<DashboardLayout title="Recetas" pageTitle="Recetas">
+  <PrescriptionList client:load />
+</DashboardLayout>

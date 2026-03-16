@@ -1,0 +1,73 @@
+import type { APIRoute } from 'astro';
+import { db } from '../../../db';
+import { patients, owners } from '../../../db/schema/patients';
+import { eq, like, or, desc } from 'drizzle-orm';
+import { patientSchema, zodError } from '../../../lib/schemas';
+
+const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
+
+export const GET: APIRoute = async ({ request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  if (!STAFF_ROLES.includes(user.role)) {
+    return new Response(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const search = url.searchParams.get('search') || '';
+  const ownerId = url.searchParams.get('ownerId');
+
+  const result = await db
+    .select({
+      id: patients.id,
+      name: patients.name,
+      species: patients.species,
+      breed: patients.breed,
+      sex: patients.sex,
+      dateOfBirth: patients.dateOfBirth,
+      weight: patients.weight,
+      isActive: patients.isActive,
+      ownerId: patients.ownerId,
+      ownerFirstName: owners.firstName,
+      ownerLastName: owners.lastName,
+      ownerPhone: owners.phone,
+    })
+    .from(patients)
+    .leftJoin(owners, eq(patients.ownerId, owners.id))
+    .where(
+      ownerId
+        ? eq(patients.ownerId, Number(ownerId))
+        : search
+        ? or(like(patients.name, `%${search}%`), like(patients.breed, `%${search}%`))
+        : undefined
+    )
+    .orderBy(desc(patients.createdAt));
+
+  return new Response(JSON.stringify(result), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+
+  const body = await request.json();
+  const parsed = patientSchema.safeParse(body);
+  if (!parsed.success) return zodError(parsed.error);
+
+  const { ownerId, name, species, breed, color, sex, dateOfBirth, weight, microchipNumber } = parsed.data;
+
+  const [result] = await db.insert(patients).values({
+    ownerId, name, species, breed, color, sex,
+    dateOfBirth: dateOfBirth || null,
+    weight: weight || null,
+    microchipNumber,
+  });
+
+  const [newPatient] = await db.select().from(patients).where(eq(patients.id, (result as any).insertId));
+  return new Response(JSON.stringify(newPatient), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
+};

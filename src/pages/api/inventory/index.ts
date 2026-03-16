@@ -1,0 +1,73 @@
+import type { APIRoute } from 'astro';
+import { db } from '../../../db';
+import { products, stockMovements } from '../../../db/schema/inventory';
+import { eq, like, or, lte, desc } from 'drizzle-orm';
+
+export const GET: APIRoute = async ({ request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+
+  const url = new URL(request.url);
+  const search = url.searchParams.get('search') || '';
+  const category = url.searchParams.get('category') || '';
+  const lowStock = url.searchParams.get('lowStock') === 'true';
+
+  let query = db.select().from(products).$dynamic();
+
+  const conditions = [eq(products.isActive, true)];
+  if (search) conditions.push(or(like(products.name, `%${search}%`), like(products.sku, `%${search}%`)) as any);
+  if (category) conditions.push(eq(products.category, category as any));
+
+  const { and } = await import('drizzle-orm');
+  query = query.where(and(...conditions));
+
+  if (lowStock) {
+    query = (db.select().from(products) as any)
+      .where(and(eq(products.isActive, true), lte(products.stock, products.minStock)));
+  }
+
+  const result = await query.orderBy(desc(products.updatedAt));
+  return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
+};
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  const user = locals.user;
+  if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  if (user.role !== 'admin' && user.role !== 'recepcionista') {
+    return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
+  }
+
+  const body = await request.json();
+  const { name, description, category, sku, barcode, unitPrice, costPrice, stock, minStock, unit, expirationDate, supplier } = body;
+
+  if (!name || !category || !unitPrice) {
+    return new Response(JSON.stringify({ error: 'Nombre, categoría y precio son requeridos' }), { status: 400 });
+  }
+
+  const [result] = await db.insert(products).values({
+    name, description, category, sku, barcode,
+    unitPrice: String(unitPrice),
+    costPrice: costPrice ? String(costPrice) : null,
+    stock: Number(stock) || 0,
+    minStock: Number(minStock) || 5,
+    unit: unit || 'unidad',
+    expirationDate: expirationDate || null,
+    supplier,
+  });
+
+  if ((result as any).insertId && Number(stock) > 0) {
+    await db.insert(stockMovements).values({
+      productId: (result as any).insertId,
+      type: 'entrada',
+      quantity: Number(stock),
+      reason: 'Stock inicial',
+      userId: user.id,
+    });
+  }
+
+  const [newProduct] = await db.select().from(products).where(eq(products.id, (result as any).insertId));
+  return new Response(JSON.stringify(newProduct), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
+};

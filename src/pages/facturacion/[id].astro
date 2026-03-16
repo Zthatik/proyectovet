@@ -1,0 +1,135 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { db } from '../../db';
+import { invoices, invoiceItems, payments } from '../../db/schema/billing';
+import { owners } from '../../db/schema/patients';
+import { eq, desc } from 'drizzle-orm';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [invoice] = await db
+  .select({
+    id: invoices.id, invoiceNumber: invoices.invoiceNumber, date: invoices.date,
+    subtotal: invoices.subtotal, taxRate: invoices.taxRate, taxAmount: invoices.taxAmount,
+    discount: invoices.discount, total: invoices.total, status: invoices.status, notes: invoices.notes,
+    ownerId: invoices.ownerId, ownerFirstName: owners.firstName, ownerLastName: owners.lastName,
+    ownerEmail: owners.email, ownerPhone: owners.phone,
+  })
+  .from(invoices)
+  .leftJoin(owners, eq(invoices.ownerId, owners.id))
+  .where(eq(invoices.id, id));
+
+if (!invoice) return Astro.redirect('/facturacion');
+
+const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+const invoicePayments = await db.select().from(payments).where(eq(payments.invoiceId, id)).orderBy(desc(payments.date));
+
+const statusColors: Record<string, string> = {
+  borrador: 'bg-gray-100 text-gray-600', emitida: 'bg-blue-100 text-blue-700',
+  pagada: 'bg-green-100 text-green-700', parcial: 'bg-yellow-100 text-yellow-700', anulada: 'bg-red-100 text-red-700',
+};
+const statusLabels: Record<string, string> = {
+  borrador: 'Borrador', emitida: 'Emitida', pagada: 'Pagada', parcial: 'Pago parcial', anulada: 'Anulada',
+};
+
+const fmt = (n: string) => parseFloat(n).toLocaleString('es-CR', { minimumFractionDigits: 2 });
+---
+
+<DashboardLayout title={invoice.invoiceNumber} pageTitle="Detalle de Factura">
+  <div class="mb-4">
+    <a href="/facturacion" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Facturación</a>
+  </div>
+
+  <div class="max-w-3xl space-y-4">
+    <div class="rounded-xl border bg-card p-6">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-bold font-mono">{invoice.invoiceNumber}</h2>
+          <p class="text-muted-foreground text-sm">{format(new Date(invoice.date), "dd 'de' MMMM yyyy", { locale: es })}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[invoice.status] || 'bg-gray-100'}`}>
+            {statusLabels[invoice.status] || invoice.status}
+          </span>
+          <a href={`/api/invoices/${id}/pdf`} target="_blank"
+            class="flex items-center gap-1.5 text-sm px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors">
+            📄 PDF
+          </a>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
+        <p class="font-medium">{invoice.ownerFirstName} {invoice.ownerLastName}</p>
+        {invoice.ownerPhone && <p class="text-sm text-muted-foreground">{invoice.ownerPhone}</p>}
+        {invoice.ownerEmail && <p class="text-sm text-muted-foreground">{invoice.ownerEmail}</p>}
+      </div>
+
+      <!-- Items -->
+      <table class="w-full text-sm mb-6">
+        <thead class="border-b">
+          <tr>
+            <th class="text-left pb-2 font-medium text-muted-foreground">Descripción</th>
+            <th class="text-right pb-2 font-medium text-muted-foreground">Cant.</th>
+            <th class="text-right pb-2 font-medium text-muted-foreground">Precio</th>
+            <th class="text-right pb-2 font-medium text-muted-foreground">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          {items.map((item) => (
+            <tr>
+              <td class="py-2">{item.description}</td>
+              <td class="py-2 text-right">{item.quantity}</td>
+              <td class="py-2 text-right">₡{fmt(item.unitPrice)}</td>
+              <td class="py-2 text-right font-medium">₡{fmt(item.subtotal)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div class="flex justify-end">
+        <dl class="space-y-1 text-sm w-52">
+          <div class="flex justify-between"><dt class="text-muted-foreground">Subtotal</dt><dd>₡{fmt(invoice.subtotal)}</dd></div>
+          {parseFloat(invoice.taxAmount) > 0 && (
+            <div class="flex justify-between"><dt class="text-muted-foreground">IVA ({invoice.taxRate}%)</dt><dd>₡{fmt(invoice.taxAmount)}</dd></div>
+          )}
+          {parseFloat(invoice.discount) > 0 && (
+            <div class="flex justify-between"><dt class="text-muted-foreground">Descuento</dt><dd>-₡{fmt(invoice.discount)}</dd></div>
+          )}
+          <div class="flex justify-between font-bold border-t pt-1 text-base">
+            <dt>Total</dt><dd>₡{fmt(invoice.total)}</dd>
+          </div>
+        </dl>
+      </div>
+
+      {invoice.notes && <p class="mt-4 text-sm text-muted-foreground border-t pt-4">{invoice.notes}</p>}
+    </div>
+
+    <!-- Pagos -->
+    <div class="rounded-xl border bg-card p-6">
+      <h3 class="font-semibold mb-4">Pagos</h3>
+      {invoicePayments.length === 0 ? (
+        <p class="text-sm text-muted-foreground">Sin pagos registrados.</p>
+      ) : (
+        <div class="space-y-2 mb-4">
+          {invoicePayments.map((p) => (
+            <div class="flex justify-between text-sm border rounded-lg px-3 py-2">
+              <span class="capitalize">{p.method}{p.reference ? ` · ${p.reference}` : ''}</span>
+              <span class="font-medium">₡{fmt(p.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {invoice.status !== 'pagada' && invoice.status !== 'anulada' && (
+        <a href={`/facturacion/${id}/pago`}
+          class="inline-block text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          Registrar Pago
+        </a>
+      )}
+    </div>
+  </div>
+</DashboardLayout>
