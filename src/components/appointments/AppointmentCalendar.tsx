@@ -17,14 +17,14 @@ interface Appointment {
   veterinarianName: string | null;
 }
 
-// Solid colors — good contrast, white text
+// Paleta café claro — texto blanco
 const STATUS_COLOR: Record<string, { solid: string; light: string; label: string }> = {
-  programada: { solid: 'bg-blue-500',   light: 'bg-blue-50 text-blue-700 border-blue-200',   label: 'Programada' },
-  confirmada: { solid: 'bg-emerald-500',light: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Confirmada' },
-  en_camino:  { solid: 'bg-violet-500', light: 'bg-violet-50 text-violet-700 border-violet-200',label: 'En camino'  },
-  en_curso:   { solid: 'bg-amber-500',  light: 'bg-amber-50 text-amber-700 border-amber-200',  label: 'En curso'   },
-  completada: { solid: 'bg-slate-400',  light: 'bg-slate-50 text-slate-600 border-slate-200',  label: 'Completada' },
-  cancelada:  { solid: 'bg-rose-500',   light: 'bg-rose-50 text-rose-700 border-rose-200',     label: 'Cancelada'  },
+  programada: { solid: 'bg-amber-700',  light: 'bg-amber-50 text-amber-800 border-amber-200',  label: 'Programada' },
+  confirmada: { solid: 'bg-amber-800',  light: 'bg-amber-50 text-amber-900 border-amber-300',  label: 'Confirmada' },
+  en_camino:  { solid: 'bg-stone-600',  light: 'bg-stone-50 text-stone-700 border-stone-200',  label: 'En camino'  },
+  en_curso:   { solid: 'bg-amber-600',  light: 'bg-amber-50 text-amber-700 border-amber-200',  label: 'En curso'   },
+  completada: { solid: 'bg-stone-400',  light: 'bg-stone-50 text-stone-600 border-stone-200',  label: 'Completada' },
+  cancelada:  { solid: 'bg-stone-300',  light: 'bg-stone-50 text-stone-500 border-stone-200',  label: 'Cancelada'  },
 };
 
 const TYPE_LABEL: Record<string, string> = {
