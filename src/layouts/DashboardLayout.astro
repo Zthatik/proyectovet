@@ -2,6 +2,9 @@
 import BaseLayout from './BaseLayout.astro';
 import { DashboardShell } from '../components/layout/DashboardShell';
 import { getNavItems } from '../lib/permissions';
+import { db } from '../db';
+import { users } from '../db/schema/users';
+import { eq } from 'drizzle-orm';
 
 interface Props {
   title: string;
@@ -15,6 +18,11 @@ if (!user) {
   return Astro.redirect('/login');
 }
 
+// Fetch fresh name from DB so sidebar reflects edits without re-login
+const [freshUser] = await db.select({ name: users.name, role: users.role })
+  .from(users)
+  .where(eq(users.id, user.id));
+
 const navItems = getNavItems(user.role as any);
 const currentPath = Astro.url.pathname;
 ---
@@ -25,8 +33,8 @@ const currentPath = Astro.url.pathname;
     navItems={navItems}
     currentPath={currentPath}
     pageTitle={pageTitle || title}
-    userName={user.name}
-    userRole={user.role}
+    userName={freshUser?.name ?? user.name}
+    userRole={freshUser?.role ?? user.role}
   >
     <slot />
   </DashboardShell>

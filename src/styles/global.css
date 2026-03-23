@@ -1,25 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: oklch(0.62 0.13 192);
-  --color-primary-foreground: oklch(0.98 0 0);
-  --color-secondary: oklch(0.93 0.02 192);
-  --color-secondary-foreground: oklch(0.25 0.03 192);
-  --color-accent: oklch(0.93 0.02 192);
-  --color-accent-foreground: oklch(0.25 0.03 192);
-  --color-muted: oklch(0.96 0.005 192);
-  --color-muted-foreground: oklch(0.55 0.02 192);
+  /* Neutro Profesional — paleta café (#664930, #997E67, #CCBEB1, #FFDBBB) */
+  --color-primary: oklch(0.37 0.065 50);           /* #664930 café oscuro */
+  --color-primary-foreground: oklch(0.98 0 0);     /* blanco */
+  --color-secondary: oklch(0.91 0.05 55);          /* #FFDBBB melocotón claro */
+  --color-secondary-foreground: oklch(0.32 0.055 50);
+  --color-accent: oklch(0.91 0.05 55);
+  --color-accent-foreground: oklch(0.32 0.055 50);
+  --color-muted: oklch(0.93 0.025 55);             /* #FFDBBB muy suave */
+  --color-muted-foreground: oklch(0.52 0.045 50);  /* #997E67 marrón medio */
   --color-destructive: oklch(0.55 0.2 25);
   --color-destructive-foreground: oklch(0.98 0 0);
-  --color-border: oklch(0.9 0.01 192);
-  --color-input: oklch(0.9 0.01 192);
-  --color-ring: oklch(0.62 0.13 192);
-  --color-background: oklch(0.99 0 0);
-  --color-foreground: oklch(0.15 0.02 192);
-  --color-card: oklch(0.99 0 0);
-  --color-card-foreground: oklch(0.15 0.02 192);
-  --color-popover: oklch(0.99 0 0);
-  --color-popover-foreground: oklch(0.15 0.02 192);
+  --color-border: oklch(0.82 0.022 52);            /* #CCBEB1 taupe */
+  --color-input: oklch(0.82 0.022 52);
+  --color-ring: oklch(0.37 0.065 50);
+  --color-background: oklch(0.98 0.004 75);        /* #FAFAF8 blanco cálido */
+  --color-foreground: oklch(0.22 0.04 50);         /* casi negro cálido */
+  --color-card: oklch(0.99 0.002 75);
+  --color-card-foreground: oklch(0.22 0.04 50);
+  --color-popover: oklch(0.99 0.002 75);
+  --color-popover-foreground: oklch(0.22 0.04 50);
+  --color-sidebar: oklch(0.78 0.025 52);           /* #CCBEB1 taupe sidebar */
+  --color-sidebar-foreground: oklch(0.22 0.04 50);
   --color-success: oklch(0.6 0.18 145);
   --color-warning: oklch(0.75 0.18 75);
 
