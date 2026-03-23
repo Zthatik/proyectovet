@@ -83,7 +83,7 @@ export function Sidebar({
             <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
               <PawPrint size={18} />
             </div>
-            <span className="font-bold text-lg">VetClinic</span>
+            <span className="font-bold text-lg">Alma Veterinaria</span>
           </div>
           <button
             onClick={onClose}

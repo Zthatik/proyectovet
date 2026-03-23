@@ -5,11 +5,11 @@ import { VaccineReminders } from '../../components/dashboard/VaccineReminders';
 import { ClientPortal } from '../../components/dashboard/ClientPortal';
 import { PawPrint, Calendar, Package, Receipt } from 'lucide-react';
 import { db } from '../../db';
-import { patients } from '../../db/schema/patients';
+import { patients, owners } from '../../db/schema/patients';
 import { appointments } from '../../db/schema/appointments';
 import { products } from '../../db/schema/inventory';
 import { invoices } from '../../db/schema/billing';
-import { eq, gte, and, count, sum, sql } from 'drizzle-orm';
+import { eq, gte, and, count, sum, sql, lt } from 'drizzle-orm';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/login');
@@ -28,7 +28,7 @@ let patientCount = { count: 0 };
 let todayAppts = { count: 0 };
 let productCount = { count: 0 };
 let revenue = 0;
-let upcomingAppts: { id: number; scheduledAt: Date; type: string; status: string }[] = [];
+let todayRoute: { id: number; scheduledAt: Date; type: string; status: string; visitAddress: string | null; patientName: string | null; ownerFirstName: string | null; ownerLastName: string | null; }[] = [];
 
 if (!isCliente) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -42,10 +42,20 @@ if (!isCliente) {
   const [monthRevenue] = await db.select({ total: sum(invoices.total) }).from(invoices)
     .where(and(gte(invoices.date, firstOfMonth), eq(invoices.status, 'pagada')));
 
-  upcomingAppts = await db.select({
-    id: appointments.id, scheduledAt: appointments.scheduledAt,
-    type: appointments.type, status: appointments.status,
-  }).from(appointments).where(gte(appointments.scheduledAt, today)).limit(5);
+  todayRoute = await db.select({
+    id: appointments.id,
+    scheduledAt: appointments.scheduledAt,
+    type: appointments.type,
+    status: appointments.status,
+    visitAddress: appointments.visitAddress,
+    patientName: patients.name,
+    ownerFirstName: owners.firstName,
+    ownerLastName: owners.lastName,
+  }).from(appointments)
+    .leftJoin(patients, eq(appointments.patientId, patients.id))
+    .leftJoin(owners, eq(appointments.ownerId, owners.id))
+    .where(and(gte(appointments.scheduledAt, today), lt(appointments.scheduledAt, tomorrow)))
+    .orderBy(appointments.scheduledAt);
 
   revenue = monthRevenue.total ? parseFloat(String(monthRevenue.total)) : 0;
 }
@@ -86,28 +96,59 @@ const statusColors: Record<string, string> = {
         </div>
 
         <div class="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <!-- Ruta de Hoy -->
           <div class="rounded-xl border bg-card p-6">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="font-semibold">Próximas Citas</h3>
-              <a href="/citas" class="text-xs text-primary hover:underline">Ver todas</a>
+              <div>
+                <h3 class="font-semibold">🗺️ Ruta de Hoy</h3>
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              </div>
+              <a href="/citas" class="text-xs text-primary hover:underline">Ver calendario</a>
             </div>
-            {upcomingAppts.length === 0 ? (
-              <p class="text-sm text-muted-foreground">No hay citas programadas.</p>
+            {todayRoute.length === 0 ? (
+              <p class="text-sm text-muted-foreground">No hay citas para hoy.</p>
             ) : (
-              <div class="space-y-2">
-                {upcomingAppts.map((a) => (
-                  <a href={`/citas/${a.id}`} class="flex items-center justify-between border rounded-lg px-3 py-2 hover:bg-muted/30 transition-colors">
-                    <span class="text-sm">{typeLabels[a.type] || a.type}</span>
-                    <div class="flex items-center gap-3">
-                      <span class={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[a.status] || 'bg-gray-100'}`}>
-                        {a.status}
-                      </span>
-                      <span class="text-xs text-muted-foreground">
-                        {new Date(a.scheduledAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+              <div class="space-y-3">
+                {todayRoute.map((a) => {
+                  const mapsUrl = a.visitAddress
+                    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.visitAddress + ', Talca, Chile')}`
+                    : null;
+                  return (
+                    <div class={`border rounded-xl p-3 ${a.status === 'completada' ? 'opacity-60' : ''}`}>
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-2 mb-1">
+                            <span class="text-sm font-semibold">
+                              {new Date(a.scheduledAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span class={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[a.status] || 'bg-gray-100'}`}>
+                              {a.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <p class="text-sm font-medium">{a.patientName || '—'} <span class="text-muted-foreground font-normal">· {typeLabels[a.type] || a.type}</span></p>
+                          <p class="text-xs text-muted-foreground">{a.ownerFirstName} {a.ownerLastName}</p>
+                          {a.visitAddress && (
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                              <svg class="h-3.5 w-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
+                              <span class="text-xs text-muted-foreground truncate">{a.visitAddress}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0">
+                          <a href={`/citas/${a.id}`} class="text-xs px-2 py-1 rounded-lg border hover:bg-muted transition-colors text-center">Ver</a>
+                          {mapsUrl && (
+                            <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                              class="text-xs px-2 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-center">
+                              Maps
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

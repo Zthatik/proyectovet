@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { appointmentFormSchema, type AppointmentFormData } from '../../lib/schemas';
+import { authClient } from '../../lib/auth-client';
 
 interface Patient {
   id: number;
@@ -11,13 +12,12 @@ interface Patient {
   ownerLastName?: string;
   ownerAddress?: string;
 }
-interface Vet { id: string; name: string; role: string; }
 
 export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [vets, setVets] = useState<Vet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { data: session } = authClient.useSession();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
@@ -28,8 +28,11 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
 
   useEffect(() => {
     fetch('/api/patients').then((r) => r.json()).then(setPatients);
-    fetch('/api/users?role=veterinario').then((r) => r.json()).then(setVets).catch(() => setVets([]));
   }, []);
+
+  useEffect(() => {
+    if (session?.user?.id) setValue('veterinarianId', session.user.id);
+  }, [session]);
 
   useEffect(() => {
     if (selectedPatientId) {
@@ -86,14 +89,7 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Veterinario *</label>
-          <select {...register('veterinarianId')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-            <option value="">Seleccionar...</option>
-            {vets.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-          </select>
-          {errors.veterinarianId && <p className="text-red-500 text-xs mt-1">{errors.veterinarianId.message}</p>}
-        </div>
+        <input type="hidden" {...register('veterinarianId')} />
 
         <div>
           <label className="block text-sm font-medium mb-1">Fecha y hora inicio *</label>
