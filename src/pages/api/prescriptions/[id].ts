@@ -10,6 +10,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const [rx] = await db
     .select({
       id: prescriptions.id, date: prescriptions.date, status: prescriptions.status, notes: prescriptions.notes,
@@ -34,6 +37,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const body = await request.json();
   await db.update(prescriptions).set({ status: body.status, notes: body.notes }).where(eq(prescriptions.id, id));
   const [updated] = await db.select().from(prescriptions).where(eq(prescriptions.id, id));

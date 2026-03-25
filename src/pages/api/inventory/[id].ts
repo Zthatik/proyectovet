@@ -8,6 +8,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const [product] = await db.select().from(products).where(eq(products.id, id));
   if (!product) return new Response(JSON.stringify({ error: 'No encontrado' }), { status: 404 });
 
@@ -20,6 +23,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const body = await request.json();
   const { name, description, category, sku, barcode, unitPrice, costPrice, minStock, unit, expirationDate, supplier, isActive } = body;
 
@@ -41,6 +47,9 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   if (user.role !== 'admin') return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   await db.update(products).set({ isActive: false }).where(eq(products.id, id));
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

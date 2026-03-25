@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { owners } from '../../../db/schema/patients';
 import { eq, like, or, desc } from 'drizzle-orm';
+import { ownerSchema, zodError } from '../../../lib/schemas';
 
 const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
 
@@ -38,14 +39,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const body = await request.json();
-  const { firstName, lastName, email, phone, address, documentId } = body;
+  const parsed = ownerSchema.safeParse(body);
+  if (!parsed.success) return zodError(parsed.error);
 
-  if (!firstName || !lastName) {
-    return new Response(JSON.stringify({ error: 'Nombre y apellido son requeridos' }), { status: 400 });
-  }
-
+  const { firstName, lastName, email, phone, address, documentId } = parsed.data;
   const [result] = await db.insert(owners).values({
-    firstName, lastName, email, phone, address, documentId,
+    firstName, lastName, email: email || null, phone: phone || null, address: address || null, documentId: documentId || null,
   });
 
   const [newOwner] = await db.select().from(owners).where(eq(owners.id, (result as any).insertId));

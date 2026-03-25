@@ -12,6 +12,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const [record] = await db
     .select({
       id: medicalRecords.id,
@@ -57,6 +60,9 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   if (user.role !== 'admin') return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   await db.delete(medicalRecords).where(eq(medicalRecords.id, id));
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

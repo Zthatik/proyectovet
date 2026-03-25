@@ -53,33 +53,36 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const invoiceNumber = `FAC-${Date.now()}`;
 
-  const [result] = await db.insert(invoices).values({
-    invoiceNumber,
-    ownerId: Number(ownerId),
-    appointmentId: appointmentId ? Number(appointmentId) : null,
-    date: new Date(),
-    subtotal: String(subtotal.toFixed(2)),
-    taxRate: String(taxRate || '0'),
-    taxAmount: String(tax.toFixed(2)),
-    discount: String(disc.toFixed(2)),
-    total: String(total.toFixed(2)),
-    notes,
-    createdBy: user.id,
+  const newInvoice = await db.transaction(async (tx) => {
+    const [result] = await tx.insert(invoices).values({
+      invoiceNumber,
+      ownerId: Number(ownerId),
+      appointmentId: appointmentId ? Number(appointmentId) : null,
+      date: new Date(),
+      subtotal: String(subtotal.toFixed(2)),
+      taxRate: String(taxRate || '0'),
+      taxAmount: String(tax.toFixed(2)),
+      discount: String(disc.toFixed(2)),
+      total: String(total.toFixed(2)),
+      notes,
+      createdBy: user.id,
+    });
+
+    const invoiceId = (result as any).insertId;
+    await tx.insert(invoiceItems).values(
+      items.map((item) => ({
+        invoiceId,
+        productId: item.productId || null,
+        description: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: String(item.unitPrice),
+        subtotal: String((item.quantity * item.unitPrice).toFixed(2)),
+      }))
+    );
+
+    const [inv] = await tx.select().from(invoices).where(eq(invoices.id, invoiceId));
+    return inv;
   });
-
-  const invoiceId = (result as any).insertId;
-  await db.insert(invoiceItems).values(
-    items.map((item) => ({
-      invoiceId,
-      productId: item.productId || null,
-      description: item.description,
-      quantity: Number(item.quantity),
-      unitPrice: String(item.unitPrice),
-      subtotal: String((item.quantity * item.unitPrice).toFixed(2)),
-    }))
-  );
-
-  const [newInvoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
   return new Response(JSON.stringify(newInvoice), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

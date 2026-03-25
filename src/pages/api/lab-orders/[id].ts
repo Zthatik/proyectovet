@@ -8,6 +8,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const body = await request.json();
   const { status, results } = body;
 

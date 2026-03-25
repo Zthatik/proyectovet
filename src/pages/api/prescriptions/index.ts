@@ -50,28 +50,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Paciente e items requeridos' }), { status: 400 });
   }
 
-  const [result] = await db.insert(prescriptions).values({
-    patientId: Number(patientId),
-    medicalRecordId: medicalRecordId ? Number(medicalRecordId) : null,
-    veterinarianId: user.id,
-    date: new Date(),
-    notes,
+  const newPrescription = await db.transaction(async (tx) => {
+    const [result] = await tx.insert(prescriptions).values({
+      patientId: Number(patientId),
+      medicalRecordId: medicalRecordId ? Number(medicalRecordId) : null,
+      veterinarianId: user.id,
+      date: new Date(),
+      notes,
+    });
+
+    const prescriptionId = (result as any).insertId;
+    await tx.insert(prescriptionItems).values(
+      items.map((item: any) => ({
+        prescriptionId,
+        medicationName: item.medicationName,
+        dosage: item.dosage || null,
+        frequency: item.frequency || null,
+        duration: item.duration || null,
+        instructions: item.instructions || null,
+        quantity: item.quantity ? Number(item.quantity) : null,
+      }))
+    );
+
+    const [pres] = await tx.select().from(prescriptions).where(eq(prescriptions.id, prescriptionId));
+    return pres;
   });
-
-  const prescriptionId = (result as any).insertId;
-  await db.insert(prescriptionItems).values(
-    items.map((item: any) => ({
-      prescriptionId,
-      medicationName: item.medicationName,
-      dosage: item.dosage || null,
-      frequency: item.frequency || null,
-      duration: item.duration || null,
-      instructions: item.instructions || null,
-      quantity: item.quantity ? Number(item.quantity) : null,
-    }))
-  );
-
-  const [newPrescription] = await db.select().from(prescriptions).where(eq(prescriptions.id, prescriptionId));
   return new Response(JSON.stringify(newPrescription), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

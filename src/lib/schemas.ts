@@ -21,7 +21,7 @@ export const patientSchema = z.object({
   color:           z.string().max(50).optional().nullable(),
   sex:             z.enum(['macho', 'hembra', 'desconocido']).optional().nullable(),
   dateOfBirth:     z.string().optional().nullable(),
-  weight:          z.number().positive().optional().nullable(),
+  weight:          z.coerce.number().positive().optional().nullable(),
   microchipNumber: z.string().max(50).optional().nullable(),
 });
 
@@ -88,10 +88,10 @@ export const productSchema = z.object({
   name:           z.string().min(1, 'Nombre requerido').max(200),
   category:       z.enum(['medicamento', 'vacuna', 'insumo', 'alimento', 'accesorio', 'otro']),
   sku:            z.string().max(50).optional().nullable(),
-  unitPrice:      z.number().nonnegative('Precio debe ser positivo'),
-  costPrice:      z.number().nonnegative().optional().nullable(),
-  stock:          z.number().int().nonnegative().default(0),
-  minStock:       z.number().int().nonnegative().default(5),
+  unitPrice:      z.coerce.number().nonnegative('Precio debe ser positivo'),
+  costPrice:      z.coerce.number().nonnegative().optional().nullable(),
+  stock:          z.coerce.number().int().nonnegative().default(0),
+  minStock:       z.coerce.number().int().nonnegative().default(5),
   unit:           z.string().max(20).default('unidad'),
   expirationDate: z.string().optional().nullable(),
   supplier:       z.string().max(200).optional().nullable(),
@@ -102,7 +102,7 @@ export type ProductInput = z.infer<typeof productSchema>;
 export const stockMovementSchema = z.object({
   productId:     z.number().int().positive(),
   type:          z.enum(['entrada', 'salida', 'ajuste']),
-  quantity:      z.number().int().positive('Cantidad debe ser mayor a 0'),
+  quantity:      z.coerce.number().int().positive('Cantidad debe ser mayor a 0'),
   reason:        z.string().max(300).optional().nullable(),
 });
 
@@ -111,8 +111,8 @@ export type StockMovementInput = z.infer<typeof stockMovementSchema>;
 // ── Invoices ──────────────────────────────────────────────────────────────────
 export const invoiceItemSchema = z.object({
   description: z.string().min(1, 'Descripción requerida').max(300),
-  quantity:    z.number().positive('Cantidad requerida'),
-  unitPrice:   z.number().nonnegative('Precio requerido'),
+  quantity:    z.coerce.number().positive('Cantidad requerida'),
+  unitPrice:   z.coerce.number().nonnegative('Precio requerido'),
   productId:   z.number().int().positive().optional().nullable(),
 });
 
@@ -128,7 +128,7 @@ export type InvoiceInput = z.infer<typeof invoiceSchema>;
 
 export const paymentSchema = z.object({
   invoiceId: z.number().int().positive(),
-  amount:    z.number().positive('Monto debe ser mayor a 0'),
+  amount:    z.coerce.number().positive('Monto debe ser mayor a 0'),
   method:    z.enum(['efectivo', 'tarjeta', 'transferencia', 'otro']),
   reference: z.string().max(100).optional().nullable(),
   date:      z.string().min(1),
@@ -157,7 +157,7 @@ export const patientFormSchema = z.object({
   breed:           z.string().max(100).optional(),
   color:           z.string().max(50).optional(),
   dateOfBirth:     z.string().optional(),
-  weight:          z.string().optional(),
+  weight:          z.union([z.string(), z.number()]).optional().transform(v => v === '' || v === undefined ? undefined : Number(v)),
   microchipNumber: z.string().max(50).optional(),
   notes:           z.string().optional(),
 });

@@ -10,6 +10,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const [patient] = await db
     .select({
       id: patients.id,
@@ -49,6 +52,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   const body = await request.json();
   const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive } = body;
 
@@ -65,6 +71,9 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   }
 
   const id = Number(params.id);
+  if (!id || isNaN(id) || id <= 0) {
+    return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
+  }
   await db.update(patients).set({ isActive: false }).where(eq(patients.id, id));
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

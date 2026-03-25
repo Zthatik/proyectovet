@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  /* Neutro Profesional — paleta café (#664930, #997E67, #CCBEB1, #FFDBBB) */
-  --color-primary: oklch(0.37 0.065 50);           /* #664930 café oscuro */
-  --color-primary-foreground: oklch(0.98 0 0);     /* blanco */
-  --color-secondary: oklch(0.91 0.05 55);          /* #FFDBBB melocotón claro */
-  --color-secondary-foreground: oklch(0.32 0.055 50);
-  --color-accent: oklch(0.91 0.05 55);
-  --color-accent-foreground: oklch(0.32 0.055 50);
-  --color-muted: oklch(0.93 0.025 55);             /* #FFDBBB muy suave */
-  --color-muted-foreground: oklch(0.52 0.045 50);  /* #997E67 marrón medio */
-  --color-destructive: oklch(0.55 0.2 25);
-  --color-destructive-foreground: oklch(0.98 0 0);
-  --color-border: oklch(0.82 0.022 52);            /* #CCBEB1 taupe */
-  --color-input: oklch(0.82 0.022 52);
-  --color-ring: oklch(0.37 0.065 50);
-  --color-background: oklch(0.98 0.004 75);        /* #FAFAF8 blanco cálido */
-  --color-foreground: oklch(0.22 0.04 50);         /* casi negro cálido */
-  --color-card: oklch(0.99 0.002 75);
-  --color-card-foreground: oklch(0.22 0.04 50);
-  --color-popover: oklch(0.99 0.002 75);
-  --color-popover-foreground: oklch(0.22 0.04 50);
-  --color-sidebar: oklch(0.78 0.025 52);           /* #CCBEB1 taupe sidebar */
-  --color-sidebar-foreground: oklch(0.22 0.04 50);
+  /* Frutal Vibrante — Lime #8FA832 · Vanilla #F0EDB8 · Cream #FFFEF0 · Raspberry #B81D52 · Lemon #F5A800 */
+  --color-primary: oklch(0.65 0.14 122);           /* Lime #8FA832 */
+  --color-primary-foreground: oklch(0.99 0 0);     /* blanco */
+  --color-secondary: oklch(0.94 0.06 98);          /* Vanilla #F0EDB8 */
+  --color-secondary-foreground: oklch(0.28 0.05 122);
+  --color-accent: oklch(0.77 0.16 75);             /* Lemon #F5A800 */
+  --color-accent-foreground: oklch(0.20 0.04 75);
+  --color-muted: oklch(0.94 0.06 98);              /* Vanilla #F0EDB8 */
+  --color-muted-foreground: oklch(0.50 0.07 112);  /* Lime apagado */
+  --color-destructive: oklch(0.58 0.18 10);        /* Pink Grapefruit #E8436A */
+  --color-destructive-foreground: oklch(0.99 0 0);
+  --color-border: oklch(0.88 0.05 98);             /* Vanilla más claro */
+  --color-input: oklch(0.88 0.05 98);
+  --color-ring: oklch(0.65 0.14 122);              /* Lime */
+  --color-background: oklch(0.99 0.015 98);        /* Cream #FFFEF0 */
+  --color-foreground: oklch(0.20 0.03 122);        /* casi negro verdoso */
+  --color-card: oklch(1.0 0 0);
+  --color-card-foreground: oklch(0.20 0.03 122);
+  --color-popover: oklch(1.0 0 0);
+  --color-popover-foreground: oklch(0.20 0.03 122);
+  --color-sidebar: oklch(0.65 0.14 122);           /* Lime sidebar */
+  --color-sidebar-foreground: oklch(0.99 0 0);     /* blanco sobre lime */
   --color-success: oklch(0.6 0.18 145);
-  --color-warning: oklch(0.75 0.18 75);
+  --color-warning: oklch(0.77 0.16 75);            /* Lemon #F5A800 */
 
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
