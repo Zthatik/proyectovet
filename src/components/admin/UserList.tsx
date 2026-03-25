@@ -20,6 +20,8 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState('');
   const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -35,13 +37,15 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
     setEditingId(u.id);
     setEditRole(u.role);
     setEditName(u.name);
+    setEditEmail(u.email);
+    setEditPassword('');
   }
 
   async function saveEdit(id: string) {
     await fetch(`/api/users/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: editRole, name: editName }),
+      body: JSON.stringify({ role: editRole, name: editName, email: editEmail, password: editPassword || undefined }),
     });
     setEditingId(null);
     fetchUsers();
@@ -81,7 +85,20 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
                   <span className="font-medium">{u.name}</span>
                 )}
               </td>
-              <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {editingId === u.id ? (
+                  <div className="space-y-1">
+                    <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="Correo" type="email"
+                      className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 w-full" />
+                    <input value={editPassword} onChange={(e) => setEditPassword(e.target.value)}
+                      placeholder="Nueva contraseña (opcional)" type="password"
+                      className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 w-full" />
+                  </div>
+                ) : (
+                  u.email
+                )}
+              </td>
               <td className="px-4 py-3">
                 {editingId === u.id ? (
                   <select value={editRole} onChange={(e) => setEditRole(e.target.value)}
