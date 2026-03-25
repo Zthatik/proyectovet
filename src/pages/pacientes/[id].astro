@@ -20,6 +20,7 @@ const [patient] = await db
     dateOfBirth: patients.dateOfBirth, weight: patients.weight,
     microchipNumber: patients.microchipNumber, notes: patients.notes,
     isActive: patients.isActive, ownerId: patients.ownerId,
+    photoUrl: patients.photoUrl,
     ownerFirstName: owners.firstName, ownerLastName: owners.lastName,
     ownerEmail: owners.email, ownerPhone: owners.phone,
   })
@@ -50,7 +51,11 @@ const typeLabels: Record<string, string> = {
     <div class="lg:col-span-1 space-y-4">
       <div class="rounded-xl border bg-card p-6">
         <div class="flex items-center justify-between mb-4">
-          <div class="text-4xl">{speciesEmoji[patient.species] || '🐾'}</div>
+          {patient.photoUrl ? (
+            <img src={patient.photoUrl} alt={patient.name} class="w-16 h-16 rounded-full object-cover border-2 border-border" />
+          ) : (
+            <div class="text-4xl">{speciesEmoji[patient.species] || '🐾'}</div>
+          )}
           <span class={`px-2 py-1 rounded-full text-xs font-medium ${patient.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
             {patient.isActive ? 'Activo' : 'Inactivo'}
           </span>
