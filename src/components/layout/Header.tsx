@@ -1,4 +1,4 @@
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 interface HeaderProps {
   title: string;
@@ -17,11 +17,6 @@ export function Header({ title, onMenuToggle }: HeaderProps) {
 
       <h1 className="text-lg font-semibold">{title}</h1>
 
-      <div className="ml-auto flex items-center gap-2">
-        <button className="relative p-2 rounded-md hover:bg-muted">
-          <Bell size={20} />
-        </button>
-      </div>
     </header>
   );
 }
