@@ -23,6 +23,7 @@ export const patientSchema = z.object({
   dateOfBirth:     z.string().optional().nullable(),
   weight:          z.coerce.number().positive().optional().nullable(),
   microchipNumber: z.string().max(50).optional().nullable(),
+  photo:           z.string().optional().nullable(),
 });
 
 export type PatientInput = z.infer<typeof patientSchema>;
@@ -160,6 +161,7 @@ export const patientFormSchema = z.object({
   weight:          z.union([z.string(), z.number()]).optional().transform(v => v === '' || v === undefined ? undefined : Number(v)),
   microchipNumber: z.string().max(50).optional(),
   notes:           z.string().optional(),
+  photo:           z.string().optional().nullable(),
 });
 export type PatientFormData = z.infer<typeof patientFormSchema>;
 

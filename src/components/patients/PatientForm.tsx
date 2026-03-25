@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { patientFormSchema, type PatientFormData } from '../../lib/schemas';
@@ -10,10 +10,29 @@ interface Props {
   defaultOwnerId?: number;
 }
 
+async function compressImage(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 120;
+      const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL('image/jpeg', 0.65));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function PatientForm({ patientId, defaultOwnerId }: Props) {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
@@ -25,9 +44,19 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
     if (patientId) {
       fetch(`/api/patients/${patientId}`)
         .then((r) => r.json())
-        .then((data) => reset({ ...data, ownerId: String(data.ownerId), weight: data.weight?.toString() || '' }));
+        .then((data) => {
+          reset({ ...data, ownerId: String(data.ownerId), weight: data.weight?.toString() || '' });
+          if (data.photo) setPhoto(data.photo);
+        });
     }
   }, [patientId]);
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImage(file);
+    setPhoto(compressed);
+  }
 
   async function onSubmit(data: PatientFormData) {
     setLoading(true);
@@ -37,7 +66,7 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, ownerId: Number(data.ownerId) }),
+      body: JSON.stringify({ ...data, ownerId: Number(data.ownerId), photo: photo || null }),
     });
     const json = await res.json();
     if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
@@ -49,16 +78,52 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
       {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Foto */}
+        <div className="sm:col-span-2 flex items-center gap-4">
+          <div
+            className="w-20 h-20 rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer bg-muted shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {photo
+              ? <img src={photo} alt="Foto" className="w-full h-full object-cover" />
+              : <span className="text-2xl">🐾</span>
+            }
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              {photo ? 'Cambiar foto' : 'Subir foto'}
+            </button>
+            <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG · se comprime automáticamente</p>
+            {photo && (
+              <button type="button" onClick={() => { setPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="text-xs text-red-500 hover:underline mt-1 block">
+                Eliminar foto
+              </button>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+        </div>
+
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium mb-1">Dueño *</label>
+          <label className="block text-sm font-medium mb-1">Tutor *</label>
           <select {...register('ownerId')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-            <option value="">Seleccionar dueño...</option>
+            <option value="">Seleccionar tutor...</option>
             {owners.map((o) => (
               <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>
             ))}
           </select>
           {errors.ownerId && <p className="text-red-500 text-xs mt-1">{errors.ownerId.message}</p>}
-          <a href="/pacientes/nuevo-dueno" className="text-xs text-primary hover:underline mt-1 inline-block">+ Registrar nuevo dueño</a>
+          <a href="/pacientes/nuevo-dueno" className="text-xs text-primary hover:underline mt-1 inline-block">+ Registrar nuevo tutor</a>
         </div>
 
         <div>

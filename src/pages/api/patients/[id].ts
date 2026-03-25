@@ -24,6 +24,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       dateOfBirth: patients.dateOfBirth,
       weight: patients.weight,
       microchipNumber: patients.microchipNumber,
+      photo: patients.photo,
       notes: patients.notes,
       isActive: patients.isActive,
       ownerId: patients.ownerId,
@@ -56,9 +57,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
   const body = await request.json();
-  const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive } = body;
+  const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive, photo } = body;
 
-  await db.update(patients).set({ name, species, breed, color, sex, dateOfBirth: dateOfBirth || null, weight: weight || null, microchipNumber, notes, isActive }).where(eq(patients.id, id));
+  await db.update(patients).set({ name, species, breed, color, sex, dateOfBirth: dateOfBirth || null, weight: weight || null, microchipNumber, notes, isActive, photo: photo ?? undefined }).where(eq(patients.id, id));
   const [updated] = await db.select().from(patients).where(eq(patients.id, id));
   return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
 };

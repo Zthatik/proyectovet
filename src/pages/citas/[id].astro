@@ -79,7 +79,7 @@ const canMed   = user.role === 'admin' || user.role === 'veterinario';
           <dd><a href={`/pacientes/${appt.patientId}`} class="text-primary hover:underline">{appt.patientName}</a></dd>
         </div>
         <div class="flex justify-between border-b pb-2">
-          <dt class="text-muted-foreground">Dueño</dt>
+          <dt class="text-muted-foreground">Tutor</dt>
           <dd>{appt.ownerFirstName} {appt.ownerLastName} {appt.ownerPhone ? `· ${appt.ownerPhone}` : ''}</dd>
         </div>
         <div class="flex justify-between border-b pb-2">

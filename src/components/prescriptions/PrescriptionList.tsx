@@ -70,7 +70,7 @@ export function PrescriptionList() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Fecha</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paciente</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Dueño</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Tutor</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Veterinario</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Estado</th>
                 <th className="px-4 py-3" />

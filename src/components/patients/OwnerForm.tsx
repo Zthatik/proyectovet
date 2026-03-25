@@ -64,7 +64,7 @@ export function OwnerForm({ ownerId }: Props) {
 
       <div className="flex gap-3">
         <button type="submit" disabled={loading} className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-60 transition-colors">
-          {loading ? 'Guardando...' : 'Registrar Dueño'}
+          {loading ? 'Guardando...' : 'Registrar Tutor'}
         </button>
         <a href="/pacientes" className="px-6 py-2 rounded-lg text-sm font-medium border hover:bg-muted transition-colors">
           Cancelar

@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
     .where(eq(appointments.id, id));
 
   if (!appt) return new Response(JSON.stringify({ error: 'Cita no encontrada' }), { status: 404 });
-  if (!appt.ownerEmail) return new Response(JSON.stringify({ error: 'El dueño no tiene email registrado' }), { status: 400 });
+  if (!appt.ownerEmail) return new Response(JSON.stringify({ error: 'El tutor no tiene email registrado' }), { status: 400 });
 
   const result = await sendAppointmentReminder({
     ownerName: `${appt.ownerFirstName} ${appt.ownerLastName}`,

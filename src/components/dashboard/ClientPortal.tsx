@@ -99,7 +99,7 @@ export function ClientPortal({ userName }: { userName: string }) {
         <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
         <h3 className="font-semibold mb-1">Perfil no vinculado</h3>
         <p className="text-sm text-muted-foreground">
-          Tu cuenta aún no está vinculada a un dueño en el sistema. Contacta a la clínica para que asocien tu perfil.
+          Tu cuenta aún no está vinculada a un tutor en el sistema. Contacta a la clínica para que asocien tu perfil.
         </p>
       </div>
     );

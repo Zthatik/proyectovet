@@ -86,7 +86,7 @@ export function PatientList() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paciente</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Especie / Raza</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Dueño</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tutor</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Teléfono</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Estado</th>
                 <th className="px-4 py-3" />

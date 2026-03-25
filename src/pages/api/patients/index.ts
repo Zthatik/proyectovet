@@ -56,13 +56,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const parsed = patientSchema.safeParse(body);
   if (!parsed.success) return zodError(parsed.error);
 
-  const { ownerId, name, species, breed, color, sex, dateOfBirth, weight, microchipNumber } = parsed.data;
+  const { ownerId, name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, photo } = parsed.data;
 
   const [result] = await db.insert(patients).values({
     ownerId, name, species, breed, color, sex,
     dateOfBirth: dateOfBirth || null,
     weight: weight || null,
     microchipNumber,
+    photo: photo || null,
   });
 
   const [newPatient] = await db.select().from(patients).where(eq(patients.id, (result as any).insertId));

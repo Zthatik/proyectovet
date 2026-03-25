@@ -110,7 +110,7 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
             className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="Dirección donde se realizará la visita..."
           />
-          <p className="text-xs text-muted-foreground mt-1">Se pre-llena con la dirección del dueño al seleccionar paciente.</p>
+          <p className="text-xs text-muted-foreground mt-1">Se pre-llena con la dirección del tutor al seleccionar paciente.</p>
         </div>
 
         <div className="sm:col-span-2">

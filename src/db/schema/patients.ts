@@ -53,7 +53,7 @@ export const patients = mysqlTable('patients', {
   dateOfBirth: date('date_of_birth'),
   weight: decimal('weight', { precision: 5, scale: 2 }),
   microchipNumber: varchar('microchip_number', { length: 50 }),
-  photo: varchar('photo', { length: 512 }),
+  photo: text('photo'),
   notes: text('notes'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),

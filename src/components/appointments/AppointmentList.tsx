@@ -102,7 +102,7 @@ export function AppointmentList() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Fecha y hora</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paciente</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Dueño</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tutor</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tipo</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Veterinario</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
