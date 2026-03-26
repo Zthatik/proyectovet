@@ -78,6 +78,7 @@ export function AppointmentList() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label="Filtrar por estado"
           className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
         >
           <option value="">Todos los estados</option>
@@ -111,6 +112,7 @@ export function AppointmentList() {
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
+            <caption className="sr-only">Lista de citas</caption>
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Fecha y hora</th>
@@ -137,6 +139,7 @@ export function AppointmentList() {
                     <select
                       value={a.status}
                       onChange={(e) => updateStatus(a.id, e.target.value, a.status)}
+                      aria-label={`Cambiar estado de cita de ${a.patientName}`}
                       className={`text-xs px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${statusColors[a.status] || 'bg-gray-100'}`}
                     >
                       <option value="programada">Programada</option>

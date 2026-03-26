@@ -53,6 +53,7 @@ export function PatientList() {
             placeholder="Buscar paciente o raza..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Buscar paciente"
             className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
@@ -82,6 +83,7 @@ export function PatientList() {
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
+            <caption className="sr-only">Lista de pacientes</caption>
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paciente</th>

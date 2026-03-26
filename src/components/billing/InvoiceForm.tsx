@@ -100,15 +100,18 @@ export function InvoiceForm() {
                       </select>
                       <input value={item.description} onChange={(e) => updateItem(i, 'description', e.target.value)}
                         placeholder="Descripción del servicio..."
+                        aria-label={`Descripción del item ${i + 1}`}
                         className="flex-1 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/30" />
                     </div>
                   </td>
                   <td className="px-3 py-2">
                     <input type="number" min="1" value={item.quantity} onChange={(e) => updateItem(i, 'quantity', Number(e.target.value))}
+                      aria-label={`Cantidad del item ${i + 1}`}
                       className="w-full border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-primary/30" />
                   </td>
                   <td className="px-3 py-2">
                     <input type="number" step="0.01" min="0" value={item.unitPrice} onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
+                      aria-label={`Precio unitario del item ${i + 1}`}
                       className="w-full border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-primary/30" />
                   </td>
                   <td className="px-3 py-2 text-right text-xs font-medium">

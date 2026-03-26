@@ -66,12 +66,14 @@ export function Sidebar({
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          role="presentation"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
+        aria-label="Navegación principal"
         className={cn(
           'fixed top-0 left-0 z-50 h-full w-64 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto border-r',
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -89,6 +91,7 @@ export function Sidebar({
           <button
             onClick={onClose}
             className="lg:hidden p-1 rounded-md"
+            aria-label="Cerrar menú"
             style={{ color: 'rgba(255,255,255,0.7)' }}
           >
             <X size={20} />
@@ -96,7 +99,7 @@ export function Sidebar({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav aria-label="Menú principal" className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = iconMap[item.icon] || LayoutDashboard;
             const isActive =

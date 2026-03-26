@@ -16,6 +16,15 @@ const { title } = Astro.props;
     <meta name="description" content="Veterinaria a Domicilio - Talca" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} | Alma Veterinaria</title>
+    <script is:inline>
+      (function() {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <slot />

@@ -112,6 +112,7 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
             type="file"
             accept="image/*"
             className="hidden"
+            aria-label="Cargar foto del paciente"
             onChange={handlePhotoChange}
           />
         </div>
