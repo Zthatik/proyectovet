@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { labOrders } from '../../../db/schema/prescriptions';
 import { eq } from 'drizzle-orm';
+import { labOrderUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   const user = locals.user;
@@ -11,8 +12,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  const { status, results } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = labOrderUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { status, results } = result.data;
 
   await db.update(labOrders).set({
     status,

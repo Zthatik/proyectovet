@@ -3,6 +3,7 @@ import { db } from '../../../db';
 import { invoices, invoiceItems, payments } from '../../../db/schema/billing';
 import { owners } from '../../../db/schema/patients';
 import { eq, desc } from 'drizzle-orm';
+import { invoiceUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -52,8 +53,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  const { status, notes } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = invoiceUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { status, notes } = result.data;
 
   await db.update(invoices).set({ status, notes }).where(eq(invoices.id, id));
   const [updated] = await db.select().from(invoices).where(eq(invoices.id, id));

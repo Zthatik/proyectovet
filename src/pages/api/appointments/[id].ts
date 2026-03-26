@@ -4,6 +4,7 @@ import { appointments } from '../../../db/schema/appointments';
 import { patients, owners } from '../../../db/schema/patients';
 import { users } from '../../../db/schema/users';
 import { eq } from 'drizzle-orm';
+import { appointmentUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -51,8 +52,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  const { scheduledAt, endAt, type, status, reason, notes, veterinarianId, visitAddress } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = appointmentUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { scheduledAt, endAt, type, status, reason, notes, veterinarianId, visitAddress } = result.data;
 
   await db.update(appointments).set({
     scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,

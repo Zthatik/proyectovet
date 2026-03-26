@@ -18,7 +18,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const conditions = [];
   if (from) conditions.push(gte(appointments.scheduledAt, new Date(from)));
   if (to) conditions.push(lte(appointments.scheduledAt, new Date(to)));
-  if (status) conditions.push(eq(appointments.status, status as any));
+  const VALID_STATUSES = ['programada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio'] as const;
+  type AppointmentStatus = typeof VALID_STATUSES[number];
+  if (status) {
+    if (!VALID_STATUSES.includes(status as AppointmentStatus)) {
+      return new Response(JSON.stringify({ error: 'Estado inválido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+    conditions.push(eq(appointments.status, status as AppointmentStatus));
+  }
 
   const result = await db
     .select({

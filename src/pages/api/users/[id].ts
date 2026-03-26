@@ -4,6 +4,7 @@ import { users, accounts } from '../../../db/schema/users';
 import { eq } from 'drizzle-orm';
 import * as crypto from 'crypto';
 import { scryptAsync } from '@noble/hashes/scrypt.js';
+import { userUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 async function hashPassword(password: string): Promise<string> {
   const saltBytes = new Uint8Array(16);
@@ -19,12 +20,17 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (user.role !== 'admin') return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
 
   const id = params.id!;
-  const body = await request.json();
-  const { role, name, email, password } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = userUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { role, name, email, password } = result.data;
 
-  const updateData: Record<string, string> = { role, name };
+  const updateData: Record<string, string> = {};
+  if (name) updateData.name = name;
   if (email) updateData.email = email;
-  await db.update(users).set(updateData).where(eq(users.id, id));
+  if (role) updateData.role = role;
+  if (Object.keys(updateData).length > 0) await db.update(users).set(updateData).where(eq(users.id, id));
 
   if (password) {
     const hashed = await hashPassword(password);

@@ -8,6 +8,13 @@ import {
   medicalRecordSchema,
   prescriptionSchema,
   stockMovementSchema,
+  patientUpdateSchema,
+  appointmentUpdateSchema,
+  userUpdateSchema,
+  invoiceUpdateSchema,
+  prescriptionUpdateSchema,
+  labOrderUpdateSchema,
+  patientSchema,
 } from './schemas';
 
 // ── ownerFormSchema ───────────────────────────────────────────────────────────
@@ -318,5 +325,125 @@ describe('stockMovementSchema', () => {
       quantity: 5,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ── Update schemas (seguridad PUT endpoints) ──────────────────────────────────
+describe('patientSchema — validación de foto', () => {
+  it('acepta foto con prefijo data:image/', () => {
+    const result = patientSchema.safeParse({
+      ownerId: 1, name: 'Rex', species: 'perro', sex: 'macho',
+      photo: 'data:image/jpeg;base64,/9j/abc123',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza foto mayor a 700.000 caracteres', () => {
+    const result = patientSchema.safeParse({
+      ownerId: 1, name: 'Rex', species: 'perro', sex: 'macho',
+      photo: 'data:image/jpeg;base64,' + 'A'.repeat(700_001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza foto sin prefijo data:image/', () => {
+    const result = patientSchema.safeParse({
+      ownerId: 1, name: 'Rex', species: 'perro', sex: 'macho',
+      photo: 'http://evil.com/script.js',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('patientUpdateSchema', () => {
+  it('acepta objeto vacío (todos los campos son opcionales)', () => {
+    expect(patientUpdateSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('rechaza species inválida aunque sea opcional', () => {
+    expect(patientUpdateSchema.safeParse({ species: 'dragon' }).success).toBe(false);
+  });
+
+  it('rechaza sex inválido', () => {
+    expect(patientUpdateSchema.safeParse({ sex: 'unknown_sex' }).success).toBe(false);
+  });
+
+  it('rechaza foto mayor a 700KB', () => {
+    const big = 'data:image/jpeg;base64,' + 'A'.repeat(700_001);
+    expect(patientUpdateSchema.safeParse({ photo: big }).success).toBe(false);
+  });
+});
+
+describe('appointmentUpdateSchema', () => {
+  it('acepta objeto vacío', () => {
+    expect(appointmentUpdateSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('rechaza status fuera del enum', () => {
+    expect(appointmentUpdateSchema.safeParse({ status: 'hacked' }).success).toBe(false);
+  });
+
+  it('rechaza type fuera del enum', () => {
+    expect(appointmentUpdateSchema.safeParse({ type: 'invalid_type' }).success).toBe(false);
+  });
+
+  it('acepta actualización parcial válida', () => {
+    expect(appointmentUpdateSchema.safeParse({ status: 'completada', notes: 'Todo bien' }).success).toBe(true);
+  });
+});
+
+describe('userUpdateSchema', () => {
+  it('rechaza contraseña menor a 8 caracteres', () => {
+    expect(userUpdateSchema.safeParse({ password: '123' }).success).toBe(false);
+  });
+
+  it('rechaza rol inválido', () => {
+    expect(userUpdateSchema.safeParse({ role: 'superadmin' }).success).toBe(false);
+  });
+
+  it('rechaza email con formato inválido', () => {
+    expect(userUpdateSchema.safeParse({ email: 'no-es-email' }).success).toBe(false);
+  });
+
+  it('acepta contraseña válida de 8+ caracteres', () => {
+    expect(userUpdateSchema.safeParse({ password: 'segura123' }).success).toBe(true);
+  });
+
+  it('acepta objeto vacío', () => {
+    expect(userUpdateSchema.safeParse({}).success).toBe(true);
+  });
+});
+
+describe('invoiceUpdateSchema', () => {
+  it('rechaza status no listado', () => {
+    expect(invoiceUpdateSchema.safeParse({ status: 'pendiente_fake' }).success).toBe(false);
+  });
+
+  it('acepta status válido', () => {
+    expect(invoiceUpdateSchema.safeParse({ status: 'pagada' }).success).toBe(true);
+  });
+});
+
+describe('prescriptionUpdateSchema', () => {
+  it('rechaza status inválido', () => {
+    expect(prescriptionUpdateSchema.safeParse({ status: 'borrado' }).success).toBe(false);
+  });
+
+  it('acepta status válido', () => {
+    expect(prescriptionUpdateSchema.safeParse({ status: 'completada' }).success).toBe(true);
+  });
+});
+
+describe('labOrderUpdateSchema', () => {
+  it('rechaza status inválido', () => {
+    expect(labOrderUpdateSchema.safeParse({ status: 'fake' }).success).toBe(false);
+  });
+
+  it('rechaza results mayor a 2000 caracteres', () => {
+    expect(labOrderUpdateSchema.safeParse({ results: 'X'.repeat(2001) }).success).toBe(false);
+  });
+
+  it('acepta status válido con results', () => {
+    expect(labOrderUpdateSchema.safeParse({ status: 'completado', results: 'Normal' }).success).toBe(true);
   });
 });

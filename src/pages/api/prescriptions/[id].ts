@@ -4,6 +4,7 @@ import { prescriptions, prescriptionItems } from '../../../db/schema/prescriptio
 import { patients, owners } from '../../../db/schema/patients';
 import { users } from '../../../db/schema/users';
 import { eq } from 'drizzle-orm';
+import { prescriptionUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -40,8 +41,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  await db.update(prescriptions).set({ status: body.status, notes: body.notes }).where(eq(prescriptions.id, id));
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = prescriptionUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  await db.update(prescriptions).set({ status: result.data.status, notes: result.data.notes }).where(eq(prescriptions.id, id));
   const [updated] = await db.select().from(prescriptions).where(eq(prescriptions.id, id));
   return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
 };

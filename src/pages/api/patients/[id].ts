@@ -4,6 +4,7 @@ import { patients, owners } from '../../../db/schema/patients';
 import { medicalRecords, vaccines } from '../../../db/schema/medical';
 import { appointments } from '../../../db/schema/appointments';
 import { eq, desc } from 'drizzle-orm';
+import { patientUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -56,8 +57,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive, photo } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = patientUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, notes, isActive, photo } = result.data;
 
   await db.update(patients).set({ name, species, breed, color, sex, dateOfBirth: dateOfBirth || null, weight: weight || null, microchipNumber, notes, isActive, photo: photo ?? undefined }).where(eq(patients.id, id));
   const [updated] = await db.select().from(patients).where(eq(patients.id, id));

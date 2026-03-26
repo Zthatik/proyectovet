@@ -15,11 +15,30 @@ function addSecurityHeaders(response: Response): Response {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+  );
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   return response;
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
+
+  // Rate limit write endpoints: 60 requests per minute per IP
+  const writeMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+  if (pathname.startsWith('/api/') && writeMethods.includes(context.request.method)) {
+    const ip = context.request.headers.get('x-forwarded-for')
+      ?? context.request.headers.get('cf-connecting-ip')
+      ?? 'unknown';
+    if (!rateLimit(`write:${ip}`, 60, 60 * 1000)) {
+      return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Espera un momento.' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      });
+    }
+  }
 
   // Rate limit auth endpoints (sign-in, sign-up): 10 requests per minute per IP
   if (pathname.startsWith('/api/auth/sign-in') || pathname.startsWith('/api/auth/sign-up')) {

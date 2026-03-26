@@ -50,6 +50,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const tax = taxRate ? (subtotal * taxRate) / 100 : 0;
   const disc = discount || 0;
   const total = subtotal + tax - disc;
+  if (total < 0) {
+    return new Response(JSON.stringify({ error: 'El total no puede ser negativo' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
 
   const invoiceNumber = `FAC-${Date.now()}`;
 

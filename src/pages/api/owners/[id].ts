@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { owners, patients } from '../../../db/schema/patients';
 import { eq } from 'drizzle-orm';
+import { ownerUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -28,8 +29,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
-  const body = await request.json();
-  const { firstName, lastName, email, phone, address, documentId } = body;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result = ownerUpdateSchema.safeParse(parsed.data);
+  if (!result.success) return zodError(result.error);
+  const { firstName, lastName, email, phone, address, documentId } = result.data;
 
   await db.update(owners).set({ firstName, lastName, email, phone, address, documentId }).where(eq(owners.id, id));
   const [updated] = await db.select().from(owners).where(eq(owners.id, id));

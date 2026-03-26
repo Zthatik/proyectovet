@@ -23,7 +23,7 @@ export const patientSchema = z.object({
   dateOfBirth:     z.string().optional().nullable(),
   weight:          z.coerce.number().positive().optional().nullable(),
   microchipNumber: z.string().max(50).optional().nullable(),
-  photo:           z.string().optional().nullable(),
+  photo:           z.string().max(700_000, 'La imagen no puede superar 500KB').refine(val => !val || val.startsWith('data:image/'), 'Formato de imagen inválido').optional().nullable(),
 });
 
 export type PatientInput = z.infer<typeof patientSchema>;
@@ -207,7 +207,63 @@ export const productFormSchema = z.object({
 });
 export type ProductFormData = z.infer<typeof productFormSchema>;
 
+// ── Update Schemas (PUT endpoints — all fields optional) ──────────────────────
+export const patientUpdateSchema = patientSchema.partial();
+export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>;
+
+export const ownerUpdateSchema = ownerSchema.partial();
+export type OwnerUpdateInput = z.infer<typeof ownerUpdateSchema>;
+
+export const appointmentUpdateSchema = z.object({
+  scheduledAt:   z.string().optional(),
+  endAt:         z.string().optional(),
+  type:          z.enum(['consulta', 'vacunacion', 'cirugia', 'control', 'emergencia', 'desparasitacion', 'grooming']).optional(),
+  status:        z.enum(['programada', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio']).optional(),
+  reason:        z.string().max(500).optional().nullable(),
+  notes:         z.string().max(1000).optional().nullable(),
+  veterinarianId: z.string().optional(),
+  visitAddress:  z.string().max(500).optional().nullable(),
+});
+export type AppointmentUpdateInput = z.infer<typeof appointmentUpdateSchema>;
+
+export const productUpdateSchema = productSchema.partial();
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
+
+export const invoiceUpdateSchema = z.object({
+  status: z.enum(['borrador', 'emitida', 'pagada', 'parcial', 'anulada']).optional(),
+  notes:  z.string().max(500).optional().nullable(),
+});
+export type InvoiceUpdateInput = z.infer<typeof invoiceUpdateSchema>;
+
+export const prescriptionUpdateSchema = z.object({
+  status: z.enum(['activa', 'completada', 'cancelada']).optional(),
+  notes:  z.string().max(1000).optional().nullable(),
+});
+export type PrescriptionUpdateInput = z.infer<typeof prescriptionUpdateSchema>;
+
+export const labOrderUpdateSchema = z.object({
+  status:  z.enum(['pendiente', 'en_proceso', 'completado', 'cancelado']).optional(),
+  results: z.string().max(2000).optional().nullable(),
+});
+export type LabOrderUpdateInput = z.infer<typeof labOrderUpdateSchema>;
+
+export const userUpdateSchema = z.object({
+  name:     z.string().min(1).max(200).optional(),
+  email:    z.string().email().optional(),
+  role:     z.enum(['admin', 'veterinario', 'recepcionista', 'cliente']).optional(),
+  password: z.string().min(8).max(100).optional(),
+});
+export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
+export async function parseJsonBody(request: Request): Promise<{ data: unknown } | { error: Response }> {
+  try {
+    return { data: await request.json() };
+  } catch {
+    return { error: new Response(JSON.stringify({ error: 'JSON inválido en el cuerpo de la solicitud' }), { status: 400, headers: { 'Content-Type': 'application/json' } }) };
+  }
+}
+
 export function zodError(error: z.ZodError) {
   const messages = error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
   return new Response(JSON.stringify({ error: messages }), {
