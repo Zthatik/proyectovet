@@ -14,6 +14,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   const url = new URL(request.url);
   const role = url.searchParams.get('role');
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   let query = db.select({
     id: users.id,
@@ -24,6 +27,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   if (role) query = query.where(eq(users.role, role as any));
 
-  const result = await query;
+  const result = await query.limit(limit).offset(offset);
   return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
 };

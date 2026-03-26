@@ -3,6 +3,7 @@ import { db } from '../../../db';
 import { vaccines } from '../../../db/schema/medical';
 import { users } from '../../../db/schema/users';
 import { eq, desc } from 'drizzle-orm';
+import { vaccineCreateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
@@ -38,20 +39,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
   }
 
-  const body = await request.json();
-  const { patientId, name, brand, batchNumber, applicationDate, nextDoseDate, notes } = body;
-
-  if (!patientId || !name || !applicationDate) {
-    return new Response(JSON.stringify({ error: 'Paciente, nombre y fecha son requeridos' }), { status: 400 });
-  }
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result_ = vaccineCreateSchema.safeParse(parsed.data);
+  if (!result_.success) return zodError(result_.error);
+  const { patientId, name, brand, batchNumber, applicationDate, nextDoseDate, notes } = result_.data;
 
   const [result] = await db.insert(vaccines).values({
-    patientId: Number(patientId),
+    patientId,
     veterinarianId: user.id,
-    name, brand, batchNumber,
+    name,
+    brand: brand ?? null,
+    batchNumber: batchNumber ?? null,
     applicationDate,
-    nextDoseDate: nextDoseDate || null,
-    notes,
+    nextDoseDate: nextDoseDate ?? null,
+    notes: notes ?? null,
   });
 
   const [newVaccine] = await db.select().from(vaccines).where(eq(vaccines.id, (result as any).insertId));

@@ -11,6 +11,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const search = url.searchParams.get('search') || '';
   const category = url.searchParams.get('category') || '';
   const lowStock = url.searchParams.get('lowStock') === 'true';
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   let query = db.select().from(products).$dynamic();
 
@@ -26,7 +29,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       .where(and(eq(products.isActive, true), lte(products.stock, products.minStock)));
   }
 
-  const result = await query.orderBy(desc(products.updatedAt));
+  const result = await query.orderBy(desc(products.updatedAt)).limit(limit).offset(offset);
   return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
 };
 

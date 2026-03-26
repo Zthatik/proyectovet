@@ -4,6 +4,7 @@ import { labOrders } from '../../../db/schema/prescriptions';
 import { patients } from '../../../db/schema/patients';
 import { users } from '../../../db/schema/users';
 import { eq, desc } from 'drizzle-orm';
+import { labOrderCreateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
@@ -37,16 +38,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
   }
 
-  const body = await request.json();
-  const { patientId, medicalRecordId, type, description } = body;
-
-  if (!patientId || !type) {
-    return new Response(JSON.stringify({ error: 'Paciente y tipo requeridos' }), { status: 400 });
-  }
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result_ = labOrderCreateSchema.safeParse(parsed.data);
+  if (!result_.success) return zodError(result_.error);
+  const { patientId, medicalRecordId, type, description } = result_.data;
 
   const [result] = await db.insert(labOrders).values({
-    patientId: Number(patientId),
-    medicalRecordId: medicalRecordId ? Number(medicalRecordId) : null,
+    patientId,
+    medicalRecordId: medicalRecordId ?? null,
     veterinarianId: user.id,
     type, description,
     requestedAt: new Date(),

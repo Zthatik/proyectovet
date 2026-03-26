@@ -11,6 +11,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   const url = new URL(request.url);
   const patientId = url.searchParams.get('patientId');
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   let query = db
     .select({
@@ -32,7 +35,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   if (patientId) query = query.where(eq(prescriptions.patientId, Number(patientId)));
 
-  const result = await query.orderBy(desc(prescriptions.date));
+  const result = await query.orderBy(desc(prescriptions.date)).limit(limit).offset(offset);
   return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
 };
 

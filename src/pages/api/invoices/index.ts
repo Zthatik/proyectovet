@@ -14,6 +14,11 @@ export const GET: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 });
   }
 
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
+
   const result = await db
     .select({
       id: invoices.id,
@@ -30,7 +35,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
     })
     .from(invoices)
     .leftJoin(owners, eq(invoices.ownerId, owners.id))
-    .orderBy(desc(invoices.date));
+    .orderBy(desc(invoices.date))
+    .limit(limit)
+    .offset(offset);
 
   return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
 };

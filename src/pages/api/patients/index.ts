@@ -16,6 +16,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const url = new URL(request.url);
   const search = url.searchParams.get('search') || '';
   const ownerId = url.searchParams.get('ownerId');
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   const result = await db
     .select({
@@ -41,7 +44,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
         ? or(like(patients.name, `%${search}%`), like(patients.breed, `%${search}%`))
         : undefined
     )
-    .orderBy(desc(patients.createdAt));
+    .orderBy(desc(patients.createdAt))
+    .limit(limit)
+    .offset(offset);
 
   return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },

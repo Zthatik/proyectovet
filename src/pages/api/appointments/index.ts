@@ -14,6 +14,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
   const status = url.searchParams.get('status');
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   const conditions = [];
   if (from) conditions.push(gte(appointments.scheduledAt, new Date(from)));
@@ -50,7 +53,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
     .leftJoin(owners, eq(appointments.ownerId, owners.id))
     .leftJoin(users, eq(appointments.veterinarianId, users.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(appointments.scheduledAt));
+    .orderBy(desc(appointments.scheduledAt))
+    .limit(limit)
+    .offset(offset);
 
   return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },

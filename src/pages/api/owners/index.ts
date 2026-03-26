@@ -15,6 +15,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
   const url = new URL(request.url);
   const search = url.searchParams.get('search') || '';
+  const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || '100')));
+  const offset = (page - 1) * limit;
 
   let query = db.select().from(owners).$dynamic();
   if (search) {
@@ -28,7 +31,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     );
   }
 
-  const result = await query.orderBy(desc(owners.createdAt));
+  const result = await query.orderBy(desc(owners.createdAt)).limit(limit).offset(offset);
   return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },
   });

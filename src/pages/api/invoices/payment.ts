@@ -2,18 +2,21 @@ import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { invoices, payments } from '../../../db/schema/billing';
 import { eq } from 'drizzle-orm';
-import { paymentSchema, zodError } from '../../../lib/schemas';
+import { paymentCreateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
 
-  const body = await request.json();
-  // Inject a date for schema validation
-  const parsed = paymentSchema.safeParse({ ...body, date: body.date || new Date().toISOString() });
-  if (!parsed.success) return zodError(parsed.error);
-
-  const { invoiceId, amount, method, reference } = parsed.data;
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result_ = paymentCreateSchema.safeParse(parsed.data);
+  if (!result_.success) return zodError(result_.error);
+  const { amount, method, reference } = result_.data;
+  const invoiceId = Number((parsed.data as any).invoiceId);
+  if (!invoiceId || !Number.isInteger(invoiceId) || invoiceId < 1) {
+    return new Response(JSON.stringify({ error: 'invoiceId: Se requiere un ID de factura válido' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
 
   const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
   if (!invoice) return new Response(JSON.stringify({ error: 'Factura no encontrada' }), { status: 404 });

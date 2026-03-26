@@ -255,6 +255,49 @@ export const userUpdateSchema = z.object({
 });
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
 
+// ── Medical Record Create (POST) ─────────────────────────────────────────────
+export const medicalRecordCreateSchema = z.object({
+  patientId: z.coerce.number().int().positive(),
+  appointmentId: z.coerce.number().int().positive().optional().nullable(),
+  date: z.string().optional(),
+  reason: z.string().min(1, 'El motivo es requerido').max(500),
+  diagnosis: z.string().max(2000).optional().nullable(),
+  treatment: z.string().max(2000).optional().nullable(),
+  observations: z.string().max(2000).optional().nullable(),
+  vitalSigns: z.object({
+    temperature: z.number().optional(),
+    heartRate: z.number().optional(),
+    weight: z.number().optional(),
+    respiratoryRate: z.number().optional(),
+  }).optional().nullable(),
+});
+
+// ── Vaccine Create (POST) ────────────────────────────────────────────────────
+export const vaccineCreateSchema = z.object({
+  patientId: z.coerce.number().int().positive(),
+  name: z.string().min(1, 'El nombre es requerido').max(100),
+  brand: z.string().max(100).optional().nullable(),
+  batchNumber: z.string().max(50).optional().nullable(),
+  applicationDate: z.string().min(1, 'La fecha es requerida'),
+  nextDoseDate: z.string().optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
+});
+
+// ── Lab Order Create (POST) ──────────────────────────────────────────────────
+export const labOrderCreateSchema = z.object({
+  patientId: z.coerce.number().int().positive(),
+  medicalRecordId: z.coerce.number().int().positive().optional().nullable(),
+  type: z.string().min(1, 'El tipo es requerido').max(100),
+  description: z.string().max(2000).optional().nullable(),
+});
+
+// ── Payment Create (POST) ────────────────────────────────────────────────────
+export const paymentCreateSchema = z.object({
+  amount: z.coerce.number().positive('El monto debe ser mayor a 0'),
+  method: z.enum(['efectivo', 'tarjeta', 'transferencia', 'otro']),
+  reference: z.string().max(100).optional().nullable(),
+});
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export async function parseJsonBody(request: Request): Promise<{ data: unknown } | { error: Response }> {
   try {

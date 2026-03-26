@@ -4,6 +4,7 @@ import { medicalRecords, vaccines } from '../../../db/schema/medical';
 import { users } from '../../../db/schema/users';
 import { patients } from '../../../db/schema/patients';
 import { eq, desc } from 'drizzle-orm';
+import { medicalRecordCreateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
 
@@ -45,20 +46,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
   }
 
-  const body = await request.json();
-  const { patientId, appointmentId, date, reason, diagnosis, treatment, observations, vitalSigns } = body;
-
-  if (!patientId || !reason) {
-    return new Response(JSON.stringify({ error: 'Paciente y motivo son requeridos' }), { status: 400 });
-  }
+  const parsed = await parseJsonBody(request);
+  if ('error' in parsed) return parsed.error;
+  const result_ = medicalRecordCreateSchema.safeParse(parsed.data);
+  if (!result_.success) return zodError(result_.error);
+  const { patientId, appointmentId, date, reason, diagnosis, treatment, observations, vitalSigns } = result_.data;
 
   const [result] = await db.insert(medicalRecords).values({
-    patientId: Number(patientId),
+    patientId,
     veterinarianId: user.id,
-    appointmentId: appointmentId ? Number(appointmentId) : null,
+    appointmentId: appointmentId ?? null,
     date: date ? new Date(date) : new Date(),
     reason, diagnosis, treatment, observations,
-    vitalSigns: vitalSigns || null,
+    vitalSigns: vitalSigns ?? null,
   });
 
   const [newRecord] = await db.select().from(medicalRecords).where(eq(medicalRecords.id, (result as any).insertId));
