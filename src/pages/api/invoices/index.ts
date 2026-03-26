@@ -38,6 +38,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 export const POST: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  if (!STAFF_ROLES.includes(user.role)) {
+    return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
+  }
 
   const body = await request.json();
   const parsed = invoiceSchema.safeParse(body);

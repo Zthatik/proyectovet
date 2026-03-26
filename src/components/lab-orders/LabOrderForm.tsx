@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FlaskConical } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Patient {
   id: number;
@@ -34,9 +35,11 @@ export function LabOrderForm() {
       body: JSON.stringify({ ...data, patientId: Number(data.patientId) }),
     });
     if (res.ok) {
-      window.location.href = '/ordenes';
+      toast.success('Orden de examen creada correctamente');
+      setTimeout(() => { window.location.href = '/ordenes'; }, 500);
     } else {
       const json = await res.json();
+      toast.error(json.error || 'Error al crear la orden');
       setError(json.error || 'Error al crear la orden');
     }
     setSaving(false);

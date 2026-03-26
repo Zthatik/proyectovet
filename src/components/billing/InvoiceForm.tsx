@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Owner { id: number; firstName: string; lastName: string; }
 interface Product { id: number; name: string; unitPrice: string; }
@@ -48,8 +49,9 @@ export function InvoiceForm() {
       body: JSON.stringify({ ownerId: Number(ownerId), items, taxRate: parseFloat(taxRate), notes }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/facturacion/${json.id}`;
+    if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success('Factura creada correctamente');
+    setTimeout(() => { window.location.href = `/facturacion/${json.id}`; }, 500);
   }
 
   return (

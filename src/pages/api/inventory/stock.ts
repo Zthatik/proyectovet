@@ -4,9 +4,14 @@ import { products, stockMovements } from '../../../db/schema/inventory';
 import { eq } from 'drizzle-orm';
 import { stockMovementSchema, zodError } from '../../../lib/schemas';
 
+const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
+
 export const POST: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  if (!STAFF_ROLES.includes(user.role)) {
+    return new Response(JSON.stringify({ error: 'Sin permiso' }), { status: 403 });
+  }
 
   const body = await request.json();
   const parsed = stockMovementSchema.safeParse(body);
@@ -24,11 +29,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Stock insuficiente' }), { status: 400 });
   }
 
-  await db.update(products).set({ stock: newStock }).where(eq(products.id, productId));
-  await db.insert(stockMovements).values({
-    productId, type, quantity, reason: reason || null, userId: user.id,
+  const updated = await db.transaction(async (tx) => {
+    await tx.update(products).set({ stock: newStock }).where(eq(products.id, productId));
+    await tx.insert(stockMovements).values({
+      productId, type, quantity, reason: reason || null, userId: user.id,
+    });
+    const [result] = await tx.select().from(products).where(eq(products.id, productId));
+    return result;
   });
 
-  const [updated] = await db.select().from(products).where(eq(products.id, productId));
   return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
 };

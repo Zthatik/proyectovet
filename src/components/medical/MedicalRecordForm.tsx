@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { medicalRecordFormSchema, type MedicalRecordFormData } from '../../lib/schemas';
 
 interface Patient { id: number; name: string; ownerFirstName?: string; ownerLastName?: string; }
@@ -42,8 +43,9 @@ export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: nu
       }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/pacientes/${data.patientId}`;
+    if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success('Registro médico guardado correctamente');
+    setTimeout(() => { window.location.href = `/pacientes/${data.patientId}`; }, 500);
   }
 
   return (

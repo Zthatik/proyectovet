@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { appointmentFormSchema, type AppointmentFormData } from '../../lib/schemas';
 import { authClient } from '../../lib/auth-client';
+import { toast } from 'sonner';
 
 interface Patient {
   id: number;
@@ -57,8 +58,9 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/citas/${json.id}`;
+    if (!res.ok) { setError(json.error || 'Error al guardar'); toast.error(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success(appointmentId ? 'Cita actualizada' : 'Cita programada correctamente');
+    setTimeout(() => { window.location.href = `/citas/${json.id}`; }, 500);
   }
 
   return (

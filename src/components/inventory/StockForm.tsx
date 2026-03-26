@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 interface FormData { type: 'entrada' | 'salida' | 'ajuste'; quantity: string; reason: string; }
 
@@ -20,8 +21,9 @@ export function StockForm({ productId }: { productId: number }) {
       body: JSON.stringify({ productId, ...data, quantity: Number(data.quantity) }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error'); setLoading(false); return; }
-    window.location.href = `/inventario/${productId}`;
+    if (!res.ok) { toast.error(json.error || 'Error'); setError(json.error || 'Error'); setLoading(false); return; }
+    toast.success('Movimiento de stock registrado');
+    setTimeout(() => { window.location.href = `/inventario/${productId}`; }, 500);
   }
 
   return (

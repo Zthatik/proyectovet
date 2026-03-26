@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { patientFormSchema, type PatientFormData } from '../../lib/schemas';
+import { toast } from 'sonner';
 
 interface Owner { id: number; firstName: string; lastName: string; }
 
@@ -69,8 +70,9 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
       body: JSON.stringify({ ...data, ownerId: Number(data.ownerId), photo: photo || null }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/pacientes/${json.id}`;
+    if (!res.ok) { setError(json.error || 'Error al guardar'); toast.error(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success(patientId ? 'Paciente actualizado correctamente' : 'Paciente registrado correctamente');
+    setTimeout(() => { window.location.href = `/pacientes/${json.id}`; }, 500);
   }
 
   return (

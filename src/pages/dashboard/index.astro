@@ -190,6 +190,7 @@ const statusColors: Record<string, string> = {
   const btn = document.getElementById('btn-bulk-remind');
   if (btn) {
     btn.addEventListener('click', async () => {
+      if (!confirm('¿Enviar recordatorios por email a los tutores con citas en las próximas 24 horas?')) return;
       btn.disabled = true;
       btn.textContent = '⏳ Enviando...';
       try {

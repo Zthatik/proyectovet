@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 interface FormData { amount: string; method: 'efectivo' | 'tarjeta' | 'transferencia' | 'otro'; reference: string; }
 
@@ -20,8 +21,9 @@ export function PaymentForm({ invoiceId, total }: { invoiceId: number; total: nu
       body: JSON.stringify({ invoiceId, ...data, amount: parseFloat(data.amount) }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error'); setLoading(false); return; }
-    window.location.href = `/facturacion/${invoiceId}`;
+    if (!res.ok) { toast.error(json.error || 'Error'); setError(json.error || 'Error'); setLoading(false); return; }
+    toast.success('Pago registrado correctamente');
+    setTimeout(() => { window.location.href = `/facturacion/${invoiceId}`; }, 500);
   }
 
   return (

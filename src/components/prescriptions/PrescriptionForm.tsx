@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Patient { id: number; name: string; ownerFirstName?: string; ownerLastName?: string; }
 interface MedItem { medicationName: string; dosage: string; frequency: string; duration: string; instructions: string; quantity: string; }
@@ -36,8 +37,9 @@ export function PrescriptionForm({ patientId: defaultPatientId, medicalRecordId 
       body: JSON.stringify({ patientId: Number(patientId), medicalRecordId: medicalRecordId || null, items, notes }),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/recetas/${json.id}`;
+    if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success('Receta creada correctamente');
+    setTimeout(() => { window.location.href = `/recetas/${json.id}`; }, 500);
   }
 
   return (

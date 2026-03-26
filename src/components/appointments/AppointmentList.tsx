@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface Appointment {
   id: number;
@@ -50,12 +51,24 @@ export function AppointmentList() {
     setLoading(false);
   }
 
-  async function updateStatus(id: number, status: string) {
-    await fetch(`/api/appointments/${id}`, {
+  async function updateStatus(id: number, newStatus: string, currentStatus: string) {
+    if (newStatus === 'cancelada' && currentStatus !== 'cancelada') {
+      if (!window.confirm('¿Estás segura de cancelar esta cita? Esta acción no se puede deshacer.')) return;
+    }
+    const res = await fetch(`/api/appointments/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status: newStatus }),
     });
+    if (res.ok) {
+      const statusLabels: Record<string, string> = {
+        programada: 'Programada', confirmada: 'Confirmada', en_camino: 'En camino',
+        en_curso: 'En curso', completada: 'Completada', cancelada: 'Cancelada', no_asistio: 'No asistió',
+      };
+      toast.success(`Cita marcada como "${statusLabels[newStatus] || newStatus}"`);
+    } else {
+      toast.error('Error al actualizar el estado');
+    }
     fetchAppointments();
   }
 
@@ -123,7 +136,7 @@ export function AppointmentList() {
                   <td className="px-4 py-3">
                     <select
                       value={a.status}
-                      onChange={(e) => updateStatus(a.id, e.target.value)}
+                      onChange={(e) => updateStatus(a.id, e.target.value, a.status)}
                       className={`text-xs px-2 py-1 rounded-full border-0 font-medium cursor-pointer ${statusColors[a.status] || 'bg-gray-100'}`}
                     >
                       <option value="programada">Programada</option>

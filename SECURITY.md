@@ -154,3 +154,9 @@ npm run test:coverage  # con reporte de cobertura
 | 2026-03-25 | Fix total negativo en facturas (descuento > subtotal) |
 | 2026-03-25 | Límite de 100 chars en parámetro `search` (prevención DoS) |
 | 2026-03-25 | Suite de tests de seguridad: 126 tests en 6 archivos |
+| 2026-03-25 | Registros médicos y vacunas protegidos contra eliminación (integridad clínica) |
+| 2026-03-25 | DELETE de tutores bloqueado si tienen pacientes (previene cascade destructivo) |
+| 2026-03-25 | Transacción atómica en movimientos de stock (stock + registro) |
+| 2026-03-25 | Role checks en 5 POST endpoints que solo verificaban autenticación |
+| 2026-03-25 | Toast notifications (sonner) en todos los formularios |
+| 2026-03-25 | Confirmación obligatoria para cancelar citas y enviar recordatorios masivos |

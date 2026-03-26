@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { productFormSchema, type ProductFormData } from '../../lib/schemas';
 
 export function ProductForm({ productId }: { productId?: number }) {
@@ -23,8 +24,9 @@ export function ProductForm({ productId }: { productId?: number }) {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/inventario/${json.id}`;
+    if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success(productId ? 'Producto actualizado correctamente' : 'Producto guardado correctamente');
+    setTimeout(() => { window.location.href = `/inventario/${json.id}`; }, 500);
   }
 
   return (

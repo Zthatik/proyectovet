@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { ownerFormSchema, type OwnerFormData } from '../../lib/schemas';
 
 interface Props { ownerId?: number; }
@@ -24,8 +25,9 @@ export function OwnerForm({ ownerId }: Props) {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    if (!res.ok) { setError(json.error || 'Error al guardar'); setLoading(false); return; }
-    window.location.href = `/pacientes/nuevo?ownerId=${json.id}`;
+    if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
+    toast.success(ownerId ? 'Tutor actualizado correctamente' : 'Tutor registrado correctamente');
+    setTimeout(() => { window.location.href = `/pacientes/nuevo?ownerId=${json.id}`; }, 500);
   }
 
   return (

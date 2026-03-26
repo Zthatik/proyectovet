@@ -51,6 +51,17 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
+
+  // Verificar si tiene pacientes activos antes de eliminar
+  const activePatients = await db.select({ id: patients.id }).from(patients)
+    .where(eq(patients.ownerId, id));
+  if (activePatients.length > 0) {
+    return new Response(
+      JSON.stringify({ error: `No se puede eliminar: el tutor tiene ${activePatients.length} paciente(s) registrado(s). Elimine o reasigne los pacientes primero.` }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   await db.delete(owners).where(eq(owners.id, id));
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };
