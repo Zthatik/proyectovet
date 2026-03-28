@@ -2,6 +2,9 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { VaccineReminders } from '../../components/dashboard/VaccineReminders';
+import { NextAppointment } from '../../components/dashboard/NextAppointment';
+import { ExpiringProducts } from '../../components/dashboard/ExpiringProducts';
+import { PendingInvoices } from '../../components/dashboard/PendingInvoices';
 import { ClientPortal } from '../../components/dashboard/ClientPortal';
 import { PawPrint, Calendar, Package, Receipt } from 'lucide-react';
 import { db } from '../../db';
@@ -95,6 +98,9 @@ const statusColors: Record<string, string> = {
             description="Ingresos del mes" icon={Receipt} href="/facturacion" />
         </div>
 
+        <!-- Próxima cita destacada -->
+        <NextAppointment client:load />
+
         <div class="grid gap-4 grid-cols-1 lg:grid-cols-2">
           <!-- Ruta de Hoy -->
           <div class="rounded-xl border bg-card p-6">
@@ -154,6 +160,11 @@ const statusColors: Record<string, string> = {
           </div>
 
           <VaccineReminders client:visible />
+        </div>
+
+        <div class="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <ExpiringProducts client:visible />
+          <PendingInvoices client:visible />
         </div>
 
         <div class="rounded-xl border bg-card p-6">
