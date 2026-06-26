@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { sql } from 'drizzle-orm';
+import { cleanupRateLimits } from '../../../lib/rateLimit';
 
 /**
  * Ping diario para evitar que Supabase (plan Free) pause el proyecto
@@ -20,6 +21,8 @@ export const GET: APIRoute = async ({ request }) => {
 
   try {
     await db.execute(sql`SELECT 1`);
+    // Aprovecha el ping diario para purgar entradas de rate limit expiradas.
+    await cleanupRateLimits();
     return new Response(
       JSON.stringify({ ok: true, ts: new Date().toISOString() }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },

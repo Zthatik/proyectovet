@@ -298,6 +298,26 @@ export const paymentCreateSchema = z.object({
   reference: z.string().max(100).optional().nullable(),
 });
 
+// ── Auth: Login ──────────────────────────────────────────────────────────────
+export const loginSchema = z.object({
+  email:    z.string().min(1, 'El correo es requerido').email('Correo inválido'),
+  password: z.string().min(1, 'La contraseña es requerida'),
+});
+export type LoginFormData = z.infer<typeof loginSchema>;
+
+// ── Auth: Registro ───────────────────────────────────────────────────────────
+export const registerSchema = z.object({
+  name:            z.string().min(1, 'El nombre es requerido').max(200),
+  email:           z.string().min(1, 'El correo es requerido').email('Correo inválido').max(200),
+  phone:           z.string().max(30).optional().or(z.literal('')),
+  password:        z.string().min(8, 'Mínimo 8 caracteres').max(100),
+  confirmPassword: z.string().min(1, 'Confirma la contraseña'),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
+});
+export type RegisterFormData = z.infer<typeof registerSchema>;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export async function parseJsonBody(request: Request): Promise<{ data: unknown } | { error: Response }> {
   try {

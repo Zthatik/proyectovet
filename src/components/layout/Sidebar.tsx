@@ -75,24 +75,23 @@ export function Sidebar({
       <aside
         aria-label="Navegación principal"
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-64 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto border-r',
+          'fixed top-0 left-0 z-50 h-full w-64 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+          'bg-sidebar text-sidebar-foreground border-r border-sidebar-border',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
-        style={{ backgroundColor: 'oklch(0.65 0.14 122)', borderColor: 'oklch(0.57 0.13 122)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid oklch(0.57 0.13 122)' }}>
+        <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'oklch(0.44 0.18 350)', color: 'white' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand text-brand-foreground">
               <PawPrint size={18} />
             </div>
-            <span className="font-bold text-lg" style={{ color: 'white' }}>Alma Veterinaria</span>
+            <span className="font-bold text-lg">Alma Veterinaria</span>
           </div>
           <button
             onClick={onClose}
-            className="lg:hidden p-1 rounded-md"
+            className="lg:hidden p-1 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-white/10 transition-colors"
             aria-label="Cerrar menú"
-            style={{ color: 'rgba(255,255,255,0.7)' }}
           >
             <X size={20} />
           </button>
@@ -110,13 +109,13 @@ export function Sidebar({
               <a
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                style={isActive
-                  ? { backgroundColor: 'rgba(255,255,255,0.22)', color: 'white', fontWeight: 600 }
-                  : { color: 'rgba(255,255,255,0.82)' }
-                }
-                onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = 'white'; } }}
-                onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.82)'; } }}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-white/20 text-sidebar-foreground font-semibold'
+                    : 'text-sidebar-foreground/80 hover:bg-white/10 hover:text-sidebar-foreground'
+                )}
               >
                 <Icon size={18} />
                 {item.label}
@@ -126,9 +125,9 @@ export function Sidebar({
         </nav>
 
         {/* User section */}
-        <div className="p-3" style={{ borderTop: '1px solid oklch(0.57 0.13 122)' }}>
+        <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'oklch(0.44 0.18 350)', color: 'white' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-brand text-brand-foreground">
               {userName
                 .split(' ')
                 .map((n) => n[0])
@@ -137,18 +136,15 @@ export function Sidebar({
                 .slice(0, 2)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: 'white' }}>{userName}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <p className="text-sm font-medium truncate">{userName}</p>
+              <p className="text-xs text-sidebar-foreground/70">
                 {roleLabels[userRole] || userRole}
               </p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm transition-colors"
-            style={{ color: 'rgba(255,255,255,0.7)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
+            className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-foreground/70 hover:bg-white/10 hover:text-sidebar-foreground transition-colors"
           >
             <LogOut size={18} />
             Cerrar sesion
