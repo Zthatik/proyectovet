@@ -27,6 +27,7 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -36,12 +37,14 @@ export function DashboardShell({
         userName={userName}
         userRole={userRole}
         isOpen={sidebarOpen}
+        collapsed={sidebarCollapsed}
         onClose={() => setSidebarOpen(false)}
       />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header
           title={pageTitle}
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+          onSidebarCollapse={() => setSidebarCollapsed((c) => !c)}
         />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>

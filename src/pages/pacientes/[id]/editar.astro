@@ -14,7 +14,7 @@ const id = Number(Astro.params.id);
       ← Volver al Paciente
     </a>
   </div>
-  <div class="rounded-xl border bg-card p-6">
+  <div class="max-w-2xl rounded-xl border bg-card p-6">
     <h2 class="text-lg font-semibold mb-6">Editar Datos del Paciente</h2>
     <PatientForm client:load patientId={id} />
   </div>
