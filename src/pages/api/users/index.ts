@@ -23,6 +23,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     name: users.name,
     email: users.email,
     role: users.role,
+    isActive: users.isActive,
   }).from(users).$dynamic();
 
   if (role) query = query.where(eq(users.role, role as any));

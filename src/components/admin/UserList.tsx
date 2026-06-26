@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Users, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Pencil, Trash2, Check, X, UserCheck, UserX } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface User { id: string; name: string; email: string; role: string; }
+interface User { id: string; name: string; email: string; role: string; isActive: boolean; }
 
 const roleColors: Record<string, string> = {
   admin: 'bg-purple-100 text-purple-700',
@@ -17,6 +18,7 @@ const roleLabels: Record<string, string> = {
 export function UserList({ currentUserId }: { currentUserId: string }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState('');
   const [editName, setEditName] = useState('');
@@ -27,10 +29,14 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
 
   async function fetchUsers() {
     setLoading(true);
-    const res = await fetch('/api/users');
-    const data = await res.json();
-    setUsers(data);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/users');
+      setUsers(await res.json());
+    } catch {
+      toast.error('No se pudieron cargar los usuarios');
+    } finally {
+      setLoading(false);
+    }
   }
 
   function startEdit(u: User) {
@@ -42,19 +48,54 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
   }
 
   async function saveEdit(id: string) {
-    await fetch(`/api/users/${id}`, {
+    const res = await fetch(`/api/users/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: editRole, name: editName, email: editEmail, password: editPassword || undefined }),
     });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      toast.error(j.error || 'No se pudo guardar');
+      return;
+    }
+    toast.success('Usuario actualizado');
     setEditingId(null);
     fetchUsers();
   }
 
-  async function deleteUser(id: string) {
-    if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return;
-    await fetch(`/api/users/${id}`, { method: 'DELETE' });
-    fetchUsers();
+  async function toggleActive(u: User) {
+    setBusyId(u.id);
+    try {
+      const res = await fetch(`/api/users/${u.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !u.isActive }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) { toast.error(j.error || 'No se pudo cambiar el estado'); return; }
+      toast.success(u.isActive ? 'Usuario desactivado' : 'Usuario reactivado');
+      fetchUsers();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteUser(u: User) {
+    if (!confirm(`¿Eliminar a ${u.name}? Esta acción no se puede deshacer.`)) return;
+    setBusyId(u.id);
+    try {
+      const res = await fetch(`/api/users/${u.id}`, { method: 'DELETE' });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // 409: tiene registros asociados → sugerir desactivar
+        toast.error(j.error || 'No se pudo eliminar', { duration: 6000 });
+        return;
+      }
+      toast.success('Usuario eliminado');
+      fetchUsers();
+    } finally {
+      setBusyId(null);
+    }
   }
 
   if (loading) return (
@@ -71,22 +112,28 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Correo</th>
             <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rol</th>
-            <th className="px-4 py-3 w-24" />
+            <th className="px-4 py-3 w-32" />
           </tr>
         </thead>
         <tbody className="divide-y">
-          {users.map((u) => (
-            <tr key={u.id} className="hover:bg-muted/20 transition-colors">
+          {users.map((u) => {
+            const inactive = !u.isActive;
+            const editing = editingId === u.id;
+            return (
+            <tr key={u.id} className={`hover:bg-muted/20 transition-colors ${inactive ? 'opacity-55' : ''}`}>
               <td className="px-4 py-3">
-                {editingId === u.id ? (
+                {editing ? (
                   <input value={editName} onChange={(e) => setEditName(e.target.value)}
                     className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 w-full" />
                 ) : (
-                  <span className="font-medium">{u.name}</span>
+                  <span className="font-medium inline-flex items-center gap-2">
+                    {u.name}
+                    {inactive && <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-700">Inactivo</span>}
+                  </span>
                 )}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {editingId === u.id ? (
+                {editing ? (
                   <div className="space-y-1">
                     <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
                       placeholder="Correo" type="email"
@@ -100,7 +147,7 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
                 )}
               </td>
               <td className="px-4 py-3">
-                {editingId === u.id ? (
+                {editing ? (
                   <select value={editRole} onChange={(e) => setEditRole(e.target.value)}
                     className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30">
                     <option value="admin">Administrador</option>
@@ -115,30 +162,48 @@ export function UserList({ currentUserId }: { currentUserId: string }) {
                 )}
               </td>
               <td className="px-4 py-3">
-                {editingId === u.id ? (
+                {editing ? (
                   <div className="flex gap-1">
-                    <button onClick={() => saveEdit(u.id)} className="p-1.5 rounded hover:bg-green-50 text-green-600">
+                    <button onClick={() => saveEdit(u.id)} aria-label="Guardar" className="p-1.5 rounded hover:bg-green-50 text-green-600">
                       <Check className="h-4 w-4" />
                     </button>
-                    <button onClick={() => setEditingId(null)} className="p-1.5 rounded hover:bg-red-50 text-red-400">
+                    <button onClick={() => setEditingId(null)} aria-label="Cancelar" className="p-1.5 rounded hover:bg-red-50 text-red-400">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 ) : (
                   <div className="flex gap-1">
-                    <button onClick={() => startEdit(u)} className="p-1.5 rounded hover:bg-muted text-muted-foreground">
+                    <button onClick={() => startEdit(u)} aria-label="Editar" className="p-1.5 rounded hover:bg-muted text-muted-foreground">
                       <Pencil className="h-4 w-4" />
                     </button>
                     {u.id !== currentUserId && (
-                      <button onClick={() => deleteUser(u.id)} className="p-1.5 rounded hover:bg-red-50 text-red-400">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => toggleActive(u)}
+                          disabled={busyId === u.id}
+                          aria-label={inactive ? 'Reactivar' : 'Desactivar'}
+                          title={inactive ? 'Reactivar' : 'Desactivar'}
+                          className={`p-1.5 rounded disabled:opacity-50 ${inactive ? 'hover:bg-green-50 text-green-600' : 'hover:bg-amber-50 text-amber-600'}`}
+                        >
+                          {inactive ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
+                        </button>
+                        <button
+                          onClick={() => deleteUser(u)}
+                          disabled={busyId === u.id}
+                          aria-label="Eliminar"
+                          title="Eliminar"
+                          className="p-1.5 rounded hover:bg-red-50 text-red-400 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

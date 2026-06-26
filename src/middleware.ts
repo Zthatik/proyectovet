@@ -92,6 +92,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return context.redirect('/login');
     }
 
+    // Bloquear cuentas desactivadas (solo cuando es explícitamente false).
+    if ((session.user as any).isActive === false) {
+      if (pathname.startsWith('/api/')) {
+        return jsonError(403, 'Cuenta desactivada');
+      }
+      return context.redirect('/login?inactiva=1');
+    }
+
     context.locals.user = session.user as any;
     context.locals.session = session.session as any;
   } catch {

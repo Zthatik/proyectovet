@@ -13,6 +13,7 @@ const allUsers = await db.select({
   name: users.name,
   email: users.email,
   role: users.role,
+  isActive: users.isActive,
 }).from(users);
 ---
 
@@ -58,7 +59,7 @@ const allUsers = await db.select({
         </div>
         <div class="flex justify-between border-b pb-2">
           <dt class="text-muted-foreground">Base de datos</dt>
-          <dd>MySQL 8 (Docker)</dd>
+          <dd>PostgreSQL (Supabase)</dd>
         </div>
         <div class="flex justify-between">
           <dt class="text-muted-foreground">Autenticación</dt>
