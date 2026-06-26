@@ -1,19 +1,20 @@
 import {
-  mysqlTable,
+  pgTable,
   varchar,
-  int,
+  integer,
+  serial,
   text,
   boolean,
   timestamp,
   date,
   decimal,
-  mysqlEnum,
+  pgEnum,
   index,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 
-export const owners = mysqlTable('owners', {
-  id: int('id').primaryKey().autoincrement(),
+export const owners = pgTable('owners', {
+  id: serial('id').primaryKey(),
   userId: varchar('user_id', { length: 36 }).references(() => users.id, {
     onDelete: 'set null',
   }),
@@ -24,32 +25,33 @@ export const owners = mysqlTable('owners', {
   address: text('address'),
   documentId: varchar('document_id', { length: 20 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => ({
   idxEmail: index('idx_owners_email').on(t.email),
 }));
 
-export const speciesEnum = mysqlEnum('species', [
+export const speciesEnum = pgEnum('species', [
   'perro',
   'gato',
   'ave',
+  'conejo',
   'reptil',
   'roedor',
   'otro',
 ]);
 
-export const sexEnum = mysqlEnum('sex', ['macho', 'hembra']);
+export const sexEnum = pgEnum('sex', ['macho', 'hembra', 'desconocido']);
 
-export const patients = mysqlTable('patients', {
-  id: int('id').primaryKey().autoincrement(),
-  ownerId: int('owner_id')
+export const patients = pgTable('patients', {
+  id: serial('id').primaryKey(),
+  ownerId: integer('owner_id')
     .notNull()
     .references(() => owners.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
-  species: speciesEnum.notNull(),
+  species: speciesEnum('species').notNull(),
   breed: varchar('breed', { length: 100 }),
   color: varchar('color', { length: 50 }),
-  sex: sexEnum.notNull(),
+  sex: sexEnum('sex').notNull(),
   dateOfBirth: date('date_of_birth'),
   weight: decimal('weight', { precision: 5, scale: 2 }),
   microchipNumber: varchar('microchip_number', { length: 50 }),
@@ -57,7 +59,7 @@ export const patients = mysqlTable('patients', {
   notes: text('notes'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => ({
   idxOwnerId: index('idx_patients_owner').on(t.ownerId),
   idxIsActive: index('idx_patients_active').on(t.isActive),

@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!result_.success) return zodError(result_.error);
   const { patientId, name, brand, batchNumber, applicationDate, nextDoseDate, notes } = result_.data;
 
-  const [result] = await db.insert(vaccines).values({
+  const [newVaccine] = await db.insert(vaccines).values({
     patientId,
     veterinarianId: user.id,
     name,
@@ -54,9 +54,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     applicationDate,
     nextDoseDate: nextDoseDate ?? null,
     notes: notes ?? null,
-  });
-
-  const [newVaccine] = await db.select().from(vaccines).where(eq(vaccines.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newVaccine), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

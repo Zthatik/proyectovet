@@ -67,7 +67,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const invoiceNumber = `FAC-${Date.now()}`;
 
   const newInvoice = await db.transaction(async (tx) => {
-    const [result] = await tx.insert(invoices).values({
+    const [created] = await tx.insert(invoices).values({
       invoiceNumber,
       ownerId: Number(ownerId),
       appointmentId: appointmentId ? Number(appointmentId) : null,
@@ -79,9 +79,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
       total: String(total.toFixed(2)),
       notes,
       createdBy: user.id,
-    });
+    }).returning();
 
-    const invoiceId = (result as any).insertId;
+    const invoiceId = created.id;
     await tx.insert(invoiceItems).values(
       items.map((item) => ({
         invoiceId,

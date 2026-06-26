@@ -45,9 +45,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const [result] = await db.insert(veterinarianSchedules).values({
     veterinarianId, dayOfWeek: Number(dayOfWeek), startTime, endTime, isActive: true,
-  });
+  }).returning({ id: veterinarianSchedules.id });
 
-  return new Response(JSON.stringify({ id: (result as any).insertId }), {
+  return new Response(JSON.stringify({ id: result.id }), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },
   });

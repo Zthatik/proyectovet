@@ -1,30 +1,30 @@
-import { mysqlTable, varchar, boolean, timestamp, mysqlEnum } from 'drizzle-orm/mysql-core';
+import { pgTable, varchar, boolean, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
-export const userRoleEnum = mysqlEnum('role', [
+export const userRoleEnum = pgEnum('role', [
   'admin',
   'veterinario',
   'recepcionista',
   'cliente',
 ]);
 
-export const users = mysqlTable('users', {
+export const users = pgTable('users', {
   id: varchar('id', { length: 36 }).primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: varchar('image', { length: 512 }),
-  role: userRoleEnum.notNull().default('cliente'),
+  role: userRoleEnum('role').notNull().default('cliente'),
   phone: varchar('phone', { length: 20 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const sessions = mysqlTable('sessions', {
+export const sessions = pgTable('sessions', {
   id: varchar('id', { length: 36 }).primaryKey(),
   expiresAt: timestamp('expires_at').notNull(),
   token: varchar('token', { length: 255 }).notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: varchar('user_agent', { length: 512 }),
   userId: varchar('user_id', { length: 36 })
@@ -32,7 +32,7 @@ export const sessions = mysqlTable('sessions', {
     .references(() => users.id, { onDelete: 'cascade' }),
 });
 
-export const accounts = mysqlTable('accounts', {
+export const accounts = pgTable('accounts', {
   id: varchar('id', { length: 36 }).primaryKey(),
   accountId: varchar('account_id', { length: 255 }).notNull(),
   providerId: varchar('provider_id', { length: 255 }).notNull(),
@@ -47,16 +47,16 @@ export const accounts = mysqlTable('accounts', {
   scope: varchar('scope', { length: 255 }),
   password: varchar('password', { length: 255 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const verifications = mysqlTable('verifications', {
+export const verifications = pgTable('verifications', {
   id: varchar('id', { length: 36 }).primaryKey(),
   identifier: varchar('identifier', { length: 255 }).notNull(),
   value: varchar('value', { length: 255 }).notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
 export type User = typeof users.$inferSelect;

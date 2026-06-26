@@ -1,32 +1,32 @@
 import {
-  mysqlTable,
+  pgTable,
   varchar,
-  int,
+  integer,
+  serial,
   text,
   timestamp,
   date,
-  datetime,
-  json,
+  jsonb,
   index,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { patients } from './patients';
 
-export const medicalRecords = mysqlTable('medical_records', {
-  id: int('id').primaryKey().autoincrement(),
-  patientId: int('patient_id')
+export const medicalRecords = pgTable('medical_records', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
   veterinarianId: varchar('veterinarian_id', { length: 36 })
     .notNull()
     .references(() => users.id),
-  appointmentId: int('appointment_id'),
-  date: datetime('date').notNull(),
+  appointmentId: integer('appointment_id'),
+  date: timestamp('date').notNull(),
   reason: varchar('reason', { length: 255 }).notNull(),
   diagnosis: text('diagnosis'),
   treatment: text('treatment'),
   observations: text('observations'),
-  vitalSigns: json('vital_signs').$type<{
+  vitalSigns: jsonb('vital_signs').$type<{
     temperature?: number;
     heartRate?: number;
     weight?: number;
@@ -38,9 +38,9 @@ export const medicalRecords = mysqlTable('medical_records', {
   idxDate: index('idx_mr_date').on(t.date),
 }));
 
-export const vaccines = mysqlTable('vaccines', {
-  id: int('id').primaryKey().autoincrement(),
-  patientId: int('patient_id')
+export const vaccines = pgTable('vaccines', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
   veterinarianId: varchar('veterinarian_id', { length: 36 })

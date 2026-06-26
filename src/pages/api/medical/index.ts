@@ -52,16 +52,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!result_.success) return zodError(result_.error);
   const { patientId, appointmentId, date, reason, diagnosis, treatment, observations, vitalSigns } = result_.data;
 
-  const [result] = await db.insert(medicalRecords).values({
+  const [newRecord] = await db.insert(medicalRecords).values({
     patientId,
     veterinarianId: user.id,
     appointmentId: appointmentId ?? null,
     date: date ? new Date(date) : new Date(),
     reason, diagnosis, treatment, observations,
     vitalSigns: vitalSigns ?? null,
-  });
-
-  const [newRecord] = await db.select().from(medicalRecords).where(eq(medicalRecords.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newRecord), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

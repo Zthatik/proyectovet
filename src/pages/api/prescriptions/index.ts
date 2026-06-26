@@ -54,15 +54,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   const newPrescription = await db.transaction(async (tx) => {
-    const [result] = await tx.insert(prescriptions).values({
+    const [created] = await tx.insert(prescriptions).values({
       patientId: Number(patientId),
       medicalRecordId: medicalRecordId ? Number(medicalRecordId) : null,
       veterinarianId: user.id,
       date: new Date(),
       notes,
-    });
+    }).returning();
 
-    const prescriptionId = (result as any).insertId;
+    const prescriptionId = created.id;
     await tx.insert(prescriptionItems).values(
       items.map((item: any) => ({
         prescriptionId,

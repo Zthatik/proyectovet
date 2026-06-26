@@ -17,7 +17,7 @@ export const auth = betterAuth({
   baseURL: appUrl,
   trustedOrigins,
   database: drizzleAdapter(db, {
-    provider: 'mysql',
+    provider: 'pg',
     schema: {
       user: users,
       session: sessions,

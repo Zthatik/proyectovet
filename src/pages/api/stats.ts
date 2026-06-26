@@ -4,8 +4,7 @@ import { patients } from '../../db/schema/patients';
 import { appointments } from '../../db/schema/appointments';
 import { products } from '../../db/schema/inventory';
 import { invoices } from '../../db/schema/billing';
-import { eq, gte, and, count, sum } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { eq, gte, and, count, sum, lt } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ locals }) => {
   const user = locals.user;
@@ -21,7 +20,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   const [todayAppts] = await db.select({ count: count() })
     .from(appointments)
-    .where(and(gte(appointments.scheduledAt, today), sql`${appointments.scheduledAt} < ${tomorrow}`));
+    .where(and(gte(appointments.scheduledAt, today), lt(appointments.scheduledAt, tomorrow)));
 
   const [productCount] = await db.select({ count: count() }).from(products).where(eq(products.isActive, true));
 

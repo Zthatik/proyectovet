@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const { patientId, ownerId, veterinarianId, scheduledAt, endAt, type, reason, notes } = parsed.data;
   const visitAddress = body.visitAddress || null;
 
-  const [result] = await db.insert(appointments).values({
+  const [newAppt] = await db.insert(appointments).values({
     patientId,
     ownerId,
     veterinarianId,
@@ -88,9 +88,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     reason,
     notes,
     visitAddress,
-  });
-
-  const [newAppt] = await db.select().from(appointments).where(eq(appointments.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newAppt), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },
