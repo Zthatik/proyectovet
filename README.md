@@ -1,43 +1,71 @@
-# Astro Starter Kit: Minimal
+# 🐾 Alma Veterinaria
+
+Sistema de gestión para clínica veterinaria: pacientes, citas, historial médico,
+recetas, laboratorio, inventario y facturación, con autenticación por roles.
+
+**Stack:** Astro 6 (SSR) · React 19 · Tailwind 4 · Drizzle ORM · Better Auth · PostgreSQL (Supabase) · Vercel.
+
+> 📚 Documentación completa del sistema en [DOCUMENTACION.md](DOCUMENTACION.md).
+> 🔒 Modelo de seguridad en [SECURITY.md](SECURITY.md).
+
+---
+
+## Desarrollo local
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+cp .env.example .env      # y completa los valores (ver abajo)
+npm run db:push           # crea el esquema en la base
+npm run db:seed           # datos de demostración (opcional)
+npx tsx src/db/set-passwords.ts   # contraseñas demo (Vet2026!)
+npm run dev               # http://localhost:4321
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### Variables de entorno
 
-## 🚀 Project Structure
+| Variable | Descripción |
+|---|---|
+| `DATABASE_URL` | Pooler de transacciones de Supabase (puerto 6543, `?pgbouncer=true`). |
+| `DIRECT_URL` | Conexión directa de Supabase (puerto 5432), para migraciones. |
+| `BETTER_AUTH_SECRET` | Secreto aleatorio ≥ 32 chars (`openssl rand -base64 32`). |
+| `BETTER_AUTH_URL` | URL pública HTTPS (sin barra final). |
+| `SMTP_*` | (Opcional) correo para recordatorios. |
 
-Inside of your Astro project, you'll see the following folders and files:
+---
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Comandos
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+| Comando | Acción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run db:push` | Aplica el esquema a la base |
+| `npm run db:generate` | Genera migraciones SQL |
+| `npm run db:studio` | Explorador de la base |
+| `npm run db:seed` | Datos de demostración |
+| `npm run db:clean` | Vacía las tablas |
+| `npm run test` | Tests (Vitest) |
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+---
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Despliegue (Vercel + Supabase)
 
-## 🧞 Commands
+1. Crear proyecto en [Supabase](https://supabase.com) (PostgreSQL).
+2. Configurar `DATABASE_URL` y `DIRECT_URL` y ejecutar `npm run db:push`.
+3. Importar el repo en [Vercel](https://vercel.com) (detecta Astro automáticamente).
+4. Añadir las variables de entorno en Vercel y desplegar.
 
-All commands are run from the root of the project, from a terminal:
+Detalle paso a paso en [DOCUMENTACION.md §7](DOCUMENTACION.md#7-despliegue-vercel--supabase).
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+---
 
-## 👀 Want to learn more?
+## Cuentas de prueba (tras seed)
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+| Rol | Email | Contraseña |
+|---|---|---|
+| Admin | admin@vetclinic.com | Vet2026! |
+| Veterinario | veterinario@vetclinic.com | Vet2026! |
+| Recepcionista | recepcion@vetclinic.com | Vet2026! |
+| Cliente | cliente@vetclinic.com | Vet2026! |
+
+> ⚠️ Cambiar estas contraseñas antes de un uso real.

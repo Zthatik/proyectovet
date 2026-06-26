@@ -21,8 +21,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@astrojs/node": "^10.0.1",
     "@astrojs/react": "^5.0.0",
+    "@astrojs/vercel": "^10.0.8",
     "@hookform/resolvers": "^5.2.2",
     "@react-pdf/renderer": "^4.3.2",
     "@tailwindcss/vite": "^4.2.1",
@@ -36,8 +36,8 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.577.0",
-    "mysql2": "^3.19.1",
     "nodemailer": "^8.0.2",
+    "postgres": "^3.4.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.71.2",

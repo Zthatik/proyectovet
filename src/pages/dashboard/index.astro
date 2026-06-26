@@ -12,7 +12,7 @@ import { patients, owners } from '../../db/schema/patients';
 import { appointments } from '../../db/schema/appointments';
 import { products } from '../../db/schema/inventory';
 import { invoices } from '../../db/schema/billing';
-import { eq, gte, and, count, sum, sql, lt } from 'drizzle-orm';
+import { eq, gte, and, count, sum, lt } from 'drizzle-orm';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/login');
@@ -38,28 +38,35 @@ if (!isCliente) {
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  [patientCount] = await db.select({ count: count() }).from(patients).where(eq(patients.isActive, true));
-  [todayAppts] = await db.select({ count: count() }).from(appointments)
-    .where(and(gte(appointments.scheduledAt, today), sql`${appointments.scheduledAt} < ${tomorrow}`));
-  [productCount] = await db.select({ count: count() }).from(products).where(eq(products.isActive, true));
-  const [monthRevenue] = await db.select({ total: sum(invoices.total) }).from(invoices)
-    .where(and(gte(invoices.date, firstOfMonth), eq(invoices.status, 'pagada')));
+  // Las 5 consultas son independientes → se ejecutan en paralelo para reducir latencia.
+  const [patientRes, apptRes, productRes, revenueRes, routeRes] = await Promise.all([
+    db.select({ count: count() }).from(patients).where(eq(patients.isActive, true)),
+    db.select({ count: count() }).from(appointments)
+      .where(and(gte(appointments.scheduledAt, today), lt(appointments.scheduledAt, tomorrow))),
+    db.select({ count: count() }).from(products).where(eq(products.isActive, true)),
+    db.select({ total: sum(invoices.total) }).from(invoices)
+      .where(and(gte(invoices.date, firstOfMonth), eq(invoices.status, 'pagada'))),
+    db.select({
+      id: appointments.id,
+      scheduledAt: appointments.scheduledAt,
+      type: appointments.type,
+      status: appointments.status,
+      visitAddress: appointments.visitAddress,
+      patientName: patients.name,
+      ownerFirstName: owners.firstName,
+      ownerLastName: owners.lastName,
+    }).from(appointments)
+      .leftJoin(patients, eq(appointments.patientId, patients.id))
+      .leftJoin(owners, eq(appointments.ownerId, owners.id))
+      .where(and(gte(appointments.scheduledAt, today), lt(appointments.scheduledAt, tomorrow)))
+      .orderBy(appointments.scheduledAt),
+  ]);
 
-  todayRoute = await db.select({
-    id: appointments.id,
-    scheduledAt: appointments.scheduledAt,
-    type: appointments.type,
-    status: appointments.status,
-    visitAddress: appointments.visitAddress,
-    patientName: patients.name,
-    ownerFirstName: owners.firstName,
-    ownerLastName: owners.lastName,
-  }).from(appointments)
-    .leftJoin(patients, eq(appointments.patientId, patients.id))
-    .leftJoin(owners, eq(appointments.ownerId, owners.id))
-    .where(and(gte(appointments.scheduledAt, today), lt(appointments.scheduledAt, tomorrow)))
-    .orderBy(appointments.scheduledAt);
-
+  [patientCount] = patientRes;
+  [todayAppts] = apptRes;
+  [productCount] = productRes;
+  todayRoute = routeRes;
+  const monthRevenue = revenueRes[0];
   revenue = monthRevenue.total ? parseFloat(String(monthRevenue.total)) : 0;
 }
 

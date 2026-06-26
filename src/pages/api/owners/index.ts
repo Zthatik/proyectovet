@@ -46,11 +46,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!parsed.success) return zodError(parsed.error);
 
   const { firstName, lastName, email, phone, address, documentId } = parsed.data;
-  const [result] = await db.insert(owners).values({
+  const [newOwner] = await db.insert(owners).values({
     firstName, lastName, email: email || null, phone: phone || null, address: address || null, documentId: documentId || null,
-  });
-
-  const [newOwner] = await db.select().from(owners).where(eq(owners.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newOwner), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

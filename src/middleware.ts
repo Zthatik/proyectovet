@@ -2,7 +2,8 @@ import { defineMiddleware } from 'astro:middleware';
 import { auth } from './lib/auth';
 import { rateLimit } from './lib/rateLimit';
 
-const publicRoutes = ['/', '/login', '/register', '/api/auth'];
+// '/api/cron' se autentica por su cuenta con CRON_SECRET (Bearer), no por sesión.
+const publicRoutes = ['/', '/login', '/register', '/api/auth', '/api/cron'];
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some(

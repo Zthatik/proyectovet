@@ -3,8 +3,8 @@
  * Uso: npx tsx src/db/set-passwords.ts
  * Con Railway: railway run npx tsx src/db/set-passwords.ts
  */
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { users, accounts } from './schema/users';
 import { eq } from 'drizzle-orm';
 import * as crypto from 'crypto';
@@ -42,7 +42,7 @@ const SEED_EMAILS = [
 const DEFAULT_PASSWORD = 'Vet2026!';
 
 async function run() {
-  const connection = await mysql.createConnection(process.env.DATABASE_URL!);
+  const connection = postgres(process.env.DIRECT_URL || process.env.DATABASE_URL!, { prepare: false });
   const db = drizzle(connection);
 
   console.log('🔑 Estableciendo contraseñas para usuarios del seed...\n');

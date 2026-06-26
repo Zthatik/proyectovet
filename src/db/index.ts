@@ -1,10 +1,11 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 
-const pool = mysql.createPool({
-  uri: import.meta.env.DATABASE_URL || process.env.DATABASE_URL,
-  waitForConnections: true,
-  connectionLimit: 10,
-});
+const connectionString =
+  import.meta.env.DATABASE_URL || process.env.DATABASE_URL;
 
-export const db = drizzle(pool);
+// `prepare: false` es obligatorio para el pooler de transacciones de Supabase
+// (puerto 6543). Ver: https://orm.drizzle.team/docs/connect-supabase
+const client = postgres(connectionString!, { prepare: false });
+
+export const db = drizzle(client);

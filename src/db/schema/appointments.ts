@@ -1,29 +1,30 @@
 import {
-  mysqlTable,
+  pgTable,
   varchar,
-  int,
+  integer,
+  serial,
   text,
   boolean,
   timestamp,
-  datetime,
   time,
-  tinyint,
-  mysqlEnum,
+  smallint,
+  pgEnum,
   index,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { patients } from './patients';
 
-export const appointmentTypeEnum = mysqlEnum('type', [
+export const appointmentTypeEnum = pgEnum('type', [
   'consulta',
   'vacunacion',
   'cirugia',
   'control',
   'emergencia',
+  'desparasitacion',
   'grooming',
 ]);
 
-export const appointmentStatusEnum = mysqlEnum('status', [
+export const appointmentStatusEnum = pgEnum('status', [
   'programada',
   'confirmada',
   'en_camino',
@@ -33,25 +34,25 @@ export const appointmentStatusEnum = mysqlEnum('status', [
   'no_asistio',
 ]);
 
-export const appointments = mysqlTable('appointments', {
-  id: int('id').primaryKey().autoincrement(),
-  patientId: int('patient_id')
+export const appointments = pgTable('appointments', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id')
     .notNull()
     .references(() => patients.id),
-  ownerId: int('owner_id').notNull(),
+  ownerId: integer('owner_id').notNull(),
   veterinarianId: varchar('veterinarian_id', { length: 36 })
     .notNull()
     .references(() => users.id),
-  scheduledAt: datetime('scheduled_at').notNull(),
-  endAt: datetime('end_at').notNull(),
-  type: appointmentTypeEnum.notNull(),
-  status: appointmentStatusEnum.notNull().default('programada'),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  endAt: timestamp('end_at').notNull(),
+  type: appointmentTypeEnum('type').notNull(),
+  status: appointmentStatusEnum('status').notNull().default('programada'),
   reason: varchar('reason', { length: 255 }),
   notes: text('notes'),
   visitAddress: varchar('visit_address', { length: 500 }),
   reminderSent: boolean('reminder_sent').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => ({
   idxScheduledAt: index('idx_appointments_scheduled').on(t.scheduledAt),
   idxStatus: index('idx_appointments_status').on(t.status),
@@ -60,12 +61,12 @@ export const appointments = mysqlTable('appointments', {
   idxOwnerId: index('idx_appt_owner_id').on(t.ownerId),
 }));
 
-export const veterinarianSchedules = mysqlTable('veterinarian_schedules', {
-  id: int('id').primaryKey().autoincrement(),
+export const veterinarianSchedules = pgTable('veterinarian_schedules', {
+  id: serial('id').primaryKey(),
   veterinarianId: varchar('veterinarian_id', { length: 36 })
     .notNull()
     .references(() => users.id),
-  dayOfWeek: tinyint('day_of_week').notNull(), // 0=Sunday .. 6=Saturday
+  dayOfWeek: smallint('day_of_week').notNull(), // 0=Sunday .. 6=Saturday
   startTime: time('start_time').notNull(),
   endTime: time('end_time').notNull(),
   isActive: boolean('is_active').notNull().default(true),

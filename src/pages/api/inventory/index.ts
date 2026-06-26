@@ -47,7 +47,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: 'Nombre, categoría y precio son requeridos' }), { status: 400 });
   }
 
-  const [result] = await db.insert(products).values({
+  const [newProduct] = await db.insert(products).values({
     name, description, category, sku, barcode,
     unitPrice: String(unitPrice),
     costPrice: costPrice ? String(costPrice) : null,
@@ -56,19 +56,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
     unit: unit || 'unidad',
     expirationDate: expirationDate || null,
     supplier,
-  });
+  }).returning();
 
-  if ((result as any).insertId && Number(stock) > 0) {
+  if (newProduct?.id && Number(stock) > 0) {
     await db.insert(stockMovements).values({
-      productId: (result as any).insertId,
+      productId: newProduct.id,
       type: 'entrada',
       quantity: Number(stock),
       reason: 'Stock inicial',
       userId: user.id,
     });
   }
-
-  const [newProduct] = await db.select().from(products).where(eq(products.id, (result as any).insertId));
   return new Response(JSON.stringify(newProduct), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

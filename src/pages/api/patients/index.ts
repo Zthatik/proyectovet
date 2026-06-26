@@ -66,15 +66,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const { ownerId, name, species, breed, color, sex, dateOfBirth, weight, microchipNumber, photo } = parsed.data;
 
-  const [result] = await db.insert(patients).values({
+  const [newPatient] = await db.insert(patients).values({
     ownerId, name, species, breed, color, sex,
     dateOfBirth: dateOfBirth || null,
-    weight: weight || null,
+    weight: weight != null ? String(weight) : null,
     microchipNumber,
     photo: photo || null,
-  });
-
-  const [newPatient] = await db.select().from(patients).where(eq(patients.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newPatient), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

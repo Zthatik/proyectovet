@@ -44,15 +44,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!result_.success) return zodError(result_.error);
   const { patientId, medicalRecordId, type, description } = result_.data;
 
-  const [result] = await db.insert(labOrders).values({
+  const [newOrder] = await db.insert(labOrders).values({
     patientId,
     medicalRecordId: medicalRecordId ?? null,
     veterinarianId: user.id,
     type, description,
     requestedAt: new Date(),
-  });
-
-  const [newOrder] = await db.select().from(labOrders).where(eq(labOrders.id, (result as any).insertId));
+  }).returning();
   return new Response(JSON.stringify(newOrder), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },
