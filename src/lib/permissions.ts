@@ -72,7 +72,28 @@ export function requiresOwnershipCheck(role: UserRole, resource: string, action:
   return rolePerms.includes(`${resource}:${action}:own`);
 }
 
+// Páginas exclusivas de staff — un cliente nunca debe acceder a ellas
+export const STAFF_ROUTES = [
+  '/pacientes',
+  '/citas',
+  '/recetas',
+  '/ordenes',
+  '/inventario',
+  '/facturacion',
+  '/metricas',
+  '/configuracion',
+];
+
 export function getNavItems(role: UserRole) {
+  // El rol cliente tiene acceso restringido: solo el dashboard.
+  // Las páginas de gestión (pacientes, citas, recetas…) son herramientas de
+  // staff y no están preparadas para mostrar solo datos propios del cliente.
+  if (role === 'cliente') {
+    return [
+      { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
+    ];
+  }
+
   const allItems = [
     { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: 'dashboard:read' },
     { label: 'Pacientes', href: '/pacientes', icon: 'PawPrint', permission: 'patients:read' },
