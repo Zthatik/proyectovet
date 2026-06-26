@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, PawPrint, Eye } from 'lucide-react';
+import { Search, Plus, PawPrint, Dog, Cat, Bird, Rabbit, FileText, CalendarPlus, type LucideIcon } from 'lucide-react';
 
 interface Patient {
   id: number;
@@ -7,21 +7,36 @@ interface Patient {
   species: string;
   breed?: string;
   sex: string;
-  weight?: string;
   isActive: boolean;
   ownerFirstName?: string;
   ownerLastName?: string;
   ownerPhone?: string;
+  hasPhoto?: boolean;
+  updatedAt?: string;
 }
+
+const speciesStyle: Record<string, { icon: LucideIcon; bg: string; fg: string; pill: string }> = {
+  perro:  { icon: Dog,      bg: 'bg-green-100',  fg: 'text-green-700',  pill: 'bg-green-100 text-green-800' },
+  gato:   { icon: Cat,      bg: 'bg-amber-100',  fg: 'text-amber-700',  pill: 'bg-amber-100 text-amber-800' },
+  ave:    { icon: Bird,     bg: 'bg-sky-100',    fg: 'text-sky-700',    pill: 'bg-sky-100 text-sky-800' },
+  conejo: { icon: Rabbit,   bg: 'bg-pink-100',   fg: 'text-pink-700',   pill: 'bg-pink-100 text-pink-800' },
+  reptil: { icon: PawPrint, bg: 'bg-emerald-100',fg: 'text-emerald-700',pill: 'bg-emerald-100 text-emerald-800' },
+  roedor: { icon: PawPrint, bg: 'bg-orange-100', fg: 'text-orange-700', pill: 'bg-orange-100 text-orange-800' },
+  otro:   { icon: PawPrint, bg: 'bg-muted',      fg: 'text-muted-foreground', pill: 'bg-muted text-muted-foreground' },
+};
+
+const FILTERS = ['todos', 'perro', 'gato', 'ave'] as const;
 
 export function PatientList() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchPatients();
+    const t = setTimeout(fetchPatients, 250);
+    return () => clearTimeout(t);
   }, [search]);
 
   async function fetchPatients() {
@@ -39,14 +54,12 @@ export function PatientList() {
     }
   }
 
-  const speciesIcon: Record<string, string> = {
-    perro: '🐕', gato: '🐈', ave: '🐦', reptil: '🦎', roedor: '🐭', otro: '🐾',
-  };
+  const visible = filter === 'todos' ? patients : patients.filter((p) => p.species === filter);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
@@ -66,68 +79,93 @@ export function PatientList() {
         </a>
       </div>
 
+      <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Filtrar por especie">
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            aria-pressed={filter === f}
+            className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors ${
+              filter === f
+                ? 'bg-primary/15 text-primary border-primary/40 font-medium'
+                : 'bg-card text-muted-foreground border-border hover:bg-muted'
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border overflow-hidden animate-pulse">
+              <div className="h-28 bg-muted" />
+              <div className="p-3 space-y-2">
+                <div className="h-3.5 bg-muted rounded w-2/3" />
+                <div className="h-3 bg-muted rounded w-full" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-red-500 mb-3">{error}</p>
+          <p className="text-destructive mb-3">{error}</p>
           <button onClick={fetchPatients} className="text-sm text-primary hover:underline">Reintentar</button>
         </div>
-      ) : patients.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <PawPrint className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p>No se encontraron pacientes</p>
         </div>
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Lista de pacientes</caption>
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paciente</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Especie / Raza</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tutor</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Teléfono</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Estado</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {patients.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-4 py-3 font-medium">
-                    <span className="mr-2">{speciesIcon[p.species] || '🐾'}</span>
-                    {p.name}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground capitalize hidden sm:table-cell">
-                    {p.species}{p.breed ? ` · ${p.breed}` : ''}
-                  </td>
-                  <td className="px-4 py-3">
-                    {p.ownerFirstName} {p.ownerLastName}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{p.ownerPhone || '—'}</td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {p.isActive ? 'Activo' : 'Inactivo'}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {visible.map((p) => {
+            const st = speciesStyle[p.species] || speciesStyle.otro;
+            const Icon = st.icon;
+            return (
+              <div key={p.id} className="rounded-xl border bg-card overflow-hidden flex flex-col hover:border-primary/40 transition-colors">
+                <a href={`/pacientes/${p.id}`} className="block relative h-28">
+                  {p.hasPhoto ? (
+                    <img
+                      src={`/api/patients/${p.id}/photo?v=${encodeURIComponent(p.updatedAt || '')}`}
+                      alt={`Foto de ${p.name}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={`w-full h-full flex items-center justify-center ${st.bg}`}>
+                      <Icon className={`h-12 w-12 ${st.fg}`} aria-hidden="true" />
+                    </div>
+                  )}
+                  <span className={`absolute top-2 left-2 text-[11px] px-2 py-0.5 rounded-full capitalize ${st.pill}`}>
+                    {p.species}
+                  </span>
+                  {!p.isActive && (
+                    <span className="absolute top-2 right-2 text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                      inactivo
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <a
-                      href={`/pacientes/${p.id}`}
-                      className="flex items-center gap-1 text-primary hover:underline text-xs"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Ver
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  )}
+                </a>
+                <div className="p-3 flex-1 flex flex-col">
+                  <a href={`/pacientes/${p.id}`} className="font-medium text-sm hover:text-primary transition-colors truncate">
+                    {p.name}
+                  </a>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {p.breed ? `${p.breed} · ` : ''}{p.ownerFirstName} {p.ownerLastName}
+                  </p>
+                </div>
+                <div className="flex border-t text-xs">
+                  <a href={`/pacientes/${p.id}`} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border-r">
+                    <FileText className="h-3.5 w-3.5" /> Historial
+                  </a>
+                  <a href={`/citas/nueva?patientId=${p.id}`} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                    <CalendarPlus className="h-3.5 w-3.5" /> Cita
+                  </a>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

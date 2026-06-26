@@ -81,6 +81,7 @@ export function getNavItems(role: UserRole) {
     { label: 'Laboratorio', href: '/ordenes', icon: 'FlaskConical', permission: 'lab-orders:read' },
     { label: 'Inventario', href: '/inventario', icon: 'Package', permission: 'inventory:read' },
     { label: 'Facturacion', href: '/facturacion', icon: 'Receipt', permission: 'invoices:read' },
+    { label: 'Metricas', href: '/metricas', icon: 'BarChart3', permission: 'invoices:read' },
     { label: 'Configuracion', href: '/configuracion', icon: 'Settings', permission: 'admin' },
   ];
 

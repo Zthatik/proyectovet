@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../../db';
-import { invoices, payments } from '../../../db/schema/billing';
+import { invoices } from '../../../db/schema/billing';
 import { appointments } from '../../../db/schema/appointments';
 import { patients } from '../../../db/schema/patients';
-import { products } from '../../../db/schema/inventory';
-import { gte, sql, and, eq } from 'drizzle-orm';
+import { products, stockMovements } from '../../../db/schema/inventory';
+import { gte, sql, and, eq, desc } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   const user = locals.user;
@@ -22,14 +22,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
   // Revenue by month
   const revenueRaw = await db
     .select({
-      month: sql<string>`DATE_FORMAT(${invoices.date}, '%Y-%m')`,
+      month: sql<string>`TO_CHAR(${invoices.date}, 'YYYY-MM')`,
       total: sql<number>`SUM(CAST(${invoices.total} AS DECIMAL(12,2)))`,
       count: sql<number>`COUNT(*)`,
     })
     .from(invoices)
     .where(and(gte(invoices.date, since), sql`${invoices.status} != 'anulada'`))
-    .groupBy(sql`DATE_FORMAT(${invoices.date}, '%Y-%m')`)
-    .orderBy(sql`DATE_FORMAT(${invoices.date}, '%Y-%m')`);
+    .groupBy(sql`TO_CHAR(${invoices.date}, 'YYYY-MM')`)
+    .orderBy(sql`TO_CHAR(${invoices.date}, 'YYYY-MM')`);
 
   // Appointments by type
   const apptByType = await db
@@ -93,6 +93,44 @@ export const GET: APIRoute = async ({ request, locals }) => {
     .from(patients)
     .where(eq(patients.isActive, true));
 
+  // Movimientos de inventario recientes
+  const recentMovements = await db
+    .select({
+      id: stockMovements.id,
+      productName: products.name,
+      type: stockMovements.type,
+      quantity: stockMovements.quantity,
+      reason: stockMovements.reason,
+      at: stockMovements.createdAt,
+    })
+    .from(stockMovements)
+    .leftJoin(products, eq(stockMovements.productId, products.id))
+    .orderBy(desc(stockMovements.createdAt))
+    .limit(8);
+
+  // Datos para el feed de cambios recientes
+  const recentInvoices = await db
+    .select({ invoiceNumber: invoices.invoiceNumber, total: invoices.total, status: invoices.status, at: invoices.createdAt })
+    .from(invoices)
+    .orderBy(desc(invoices.createdAt))
+    .limit(6);
+
+  const recentAppts = await db
+    .select({ patientName: patients.name, type: appointments.type, status: appointments.status, at: appointments.createdAt })
+    .from(appointments)
+    .leftJoin(patients, eq(appointments.patientId, patients.id))
+    .orderBy(desc(appointments.createdAt))
+    .limit(6);
+
+  const recentActivity = [
+    ...recentInvoices.map((i) => ({ kind: 'invoice' as const, label: `Factura ${i.invoiceNumber}`, detail: String(i.status), amount: Number(i.total), at: i.at })),
+    ...recentAppts.map((a) => ({ kind: 'appointment' as const, label: `Cita · ${a.patientName ?? 'paciente'}`, detail: String(a.status), at: a.at })),
+    ...recentMovements.map((m) => ({ kind: 'movement' as const, label: m.productName ?? 'Producto', detail: String(m.type), qty: m.quantity, at: m.at })),
+  ]
+    .filter((x) => x.at)
+    .sort((a, b) => new Date(b.at as any).getTime() - new Date(a.at as any).getTime())
+    .slice(0, 8);
+
   return new Response(
     JSON.stringify({
       revenueByMonth: revenueRaw,
@@ -100,6 +138,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
       appointmentsByStatus: apptByStatus,
       topPatients,
       lowStock,
+      recentMovements,
+      recentActivity,
       summary: {
         totalRevenue: totals?.totalRevenue ?? 0,
         paidInvoices: totals?.paidCount ?? 0,

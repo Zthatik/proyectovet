@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../../db';
 import { patients, owners } from '../../../db/schema/patients';
-import { eq, like, or, desc } from 'drizzle-orm';
+import { eq, like, or, desc, sql } from 'drizzle-orm';
 import { patientSchema, zodError } from '../../../lib/schemas';
 
 const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
@@ -34,6 +34,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
       ownerFirstName: owners.firstName,
       ownerLastName: owners.lastName,
       ownerPhone: owners.phone,
+      hasPhoto: sql<boolean>`${patients.photo} IS NOT NULL`,
+      updatedAt: patients.updatedAt,
     })
     .from(patients)
     .leftJoin(owners, eq(patients.ownerId, owners.id))

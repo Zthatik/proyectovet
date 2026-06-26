@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PawPrint } from 'lucide-react';
 import { patientFormSchema, type PatientFormData } from '../../lib/schemas';
 import { toast } from 'sonner';
 
@@ -15,14 +16,14 @@ async function compressImage(file: File): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 120;
+      const MAX = 360;
       const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(img.width * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(img.src);
-      resolve(canvas.toDataURL('image/jpeg', 0.65));
+      resolve(canvas.toDataURL('image/jpeg', 0.72));
     };
     img.src = URL.createObjectURL(file);
   });
@@ -89,7 +90,7 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
           >
             {photo
               ? <img src={photo} alt="Foto" className="w-full h-full object-cover" />
-              : <span className="text-2xl">🐾</span>
+              : <PawPrint className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
             }
           </div>
           <div>
