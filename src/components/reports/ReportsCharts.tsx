@@ -3,7 +3,12 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Calendar, Users, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Calendar, Users, AlertTriangle, Package, Receipt, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Clock } from 'lucide-react';
+
+type Activity =
+  | { kind: 'invoice'; label: string; detail: string; amount: number; at: string }
+  | { kind: 'appointment'; label: string; detail: string; at: string }
+  | { kind: 'movement'; label: string; detail: string; qty: number; at: string };
 
 interface ReportData {
   revenueByMonth: { month: string; total: number; count: number }[];
@@ -11,6 +16,8 @@ interface ReportData {
   appointmentsByStatus: { status: string; count: number }[];
   topPatients: { name: string; species: string; count: number }[];
   lowStock: { name: string; stock: number; minStock: number }[];
+  recentMovements: { id: number; productName: string | null; type: string; quantity: number; reason: string | null; at: string }[];
+  recentActivity: Activity[];
   summary: {
     totalRevenue: number;
     paidInvoices: number;
@@ -18,6 +25,17 @@ interface ReportData {
     totalAppointments: number;
     totalPatients: number;
   };
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.round(diff / 60000);
+  if (m < 1) return 'ahora';
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `hace ${h} h`;
+  const d = Math.round(h / 24);
+  return `hace ${d} d`;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -209,6 +227,77 @@ export function ReportsCharts() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Movimientos de inventario */}
+        <div className="rounded-xl border bg-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold">Movimientos de inventario</h3>
+          </div>
+          {(data.recentMovements?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">Sin movimientos recientes</p>
+          ) : (
+            <div className="divide-y">
+              {data.recentMovements.map((m) => {
+                const isIn = m.type === 'entrada';
+                const isAdj = m.type === 'ajuste';
+                return (
+                  <div key={m.id} className="flex items-center justify-between py-2.5 text-sm">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {isAdj ? <SlidersHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
+                        : isIn ? <ArrowDownRight className="h-4 w-4 text-green-600 shrink-0" />
+                        : <ArrowUpRight className="h-4 w-4 text-red-500 shrink-0" />}
+                      <span className="truncate">{m.productName || 'Producto'}</span>
+                      <span className="text-xs text-muted-foreground capitalize hidden sm:inline">· {m.type}</span>
+                    </div>
+                    <span className={`font-medium tabular-nums ${isIn ? 'text-green-600' : isAdj ? 'text-muted-foreground' : 'text-red-500'}`}>
+                      {isIn ? '+' : isAdj ? '' : '−'}{Math.abs(m.quantity)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Cambios recientes */}
+        <div className="rounded-xl border bg-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold">Cambios recientes</h3>
+          </div>
+          {(data.recentActivity?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">Sin actividad reciente</p>
+          ) : (
+            <div className="space-y-3">
+              {data.recentActivity.map((a, i) => {
+                const cfg = a.kind === 'invoice'
+                  ? { Icon: Receipt, cls: 'bg-pink-100 text-pink-700' }
+                  : a.kind === 'appointment'
+                  ? { Icon: Calendar, cls: 'bg-sky-100 text-sky-700' }
+                  : { Icon: Package, cls: 'bg-amber-100 text-amber-700' };
+                const Icon = cfg.Icon;
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.cls}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">
+                        {a.label}
+                        {a.kind === 'invoice' && <span className="text-muted-foreground"> · {fmt(a.amount)}</span>}
+                        {a.kind === 'movement' && <span className="text-muted-foreground"> · {a.qty > 0 ? '+' : ''}{a.qty}</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">{a.detail} · {timeAgo(a.at)}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

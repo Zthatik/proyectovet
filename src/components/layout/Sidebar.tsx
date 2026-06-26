@@ -6,6 +6,7 @@ import {
   FlaskConical,
   Package,
   Receipt,
+  BarChart3,
   Settings,
   LogOut,
   X,
@@ -22,6 +23,7 @@ const iconMap: Record<string, LucideIcon> = {
   FlaskConical,
   Package,
   Receipt,
+  BarChart3,
   Settings,
 };
 
