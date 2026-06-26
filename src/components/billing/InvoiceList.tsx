@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Receipt, Eye } from 'lucide-react';
+import { Plus, Receipt, Eye, BarChart2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -25,7 +25,7 @@ const statusLabels: Record<string, string> = {
   borrador: 'Borrador', emitida: 'Emitida', pagada: 'Pagada', parcial: 'Pago parcial', anulada: 'Anulada',
 };
 
-export function InvoiceList() {
+export function InvoiceList({ showReports = false }: { showReports?: boolean }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -48,7 +48,13 @@ export function InvoiceList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {showReports && (
+          <a href="/facturacion/reportes"
+            className="flex items-center gap-2 text-sm px-4 py-2 border rounded-lg font-medium hover:bg-muted transition-colors text-muted-foreground">
+            <BarChart2 className="h-4 w-4" /> Ver Reportes
+          </a>
+        )}
         <a href="/facturacion/nueva"
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
           <Plus className="h-4 w-4" /> Nueva Factura
