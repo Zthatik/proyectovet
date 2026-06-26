@@ -14,7 +14,7 @@ const medicalRecordId = Astro.url.searchParams.get('medicalRecordId');
   <div class="mb-6">
     <a href="/recetas" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Recetas</a>
   </div>
-  <div class="rounded-xl border bg-card p-6">
+  <div class="max-w-2xl rounded-xl border bg-card p-6">
     <PrescriptionForm
       client:load
       patientId={patientId ? Number(patientId) : undefined}
