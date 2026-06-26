@@ -117,7 +117,7 @@ Todos bajo `/api/`, protegidos por el middleware (sesión obligatoria salvo `/ap
 | Laboratorio | `/api/lab-orders`, `/api/lab-orders/[id]` |
 | Inventario | `/api/inventory`, `/api/inventory/[id]`, `/api/inventory/stock` |
 | Facturación | `/api/invoices`, `/api/invoices/[id]`, `.../pdf`, `/api/invoices/payment` |
-| Reportes | `/api/reports`, `/api/stats`, `/api/dashboard/stats` |
+| Reportes | `/api/reports`, `/api/dashboard/stats` |
 | Usuarios | `/api/users`, `/api/users/[id]` (solo admin) |
 | Horarios | `/api/schedules`, `/api/schedules/[id]` |
 | Portal cliente | `/api/client/portal` |

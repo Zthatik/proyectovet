@@ -1,54 +1,41 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { rateLimit, rateLimitMap } from './rateLimit';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-describe('rateLimit', () => {
-  beforeEach(() => {
-    rateLimitMap.clear();
+// Mock de la BD: rateLimit hace db.execute(...) y usa el `count` devuelto.
+const execute = vi.fn();
+vi.mock('../db', () => ({ db: { execute: (...args: unknown[]) => execute(...args) } }));
+
+import { rateLimit } from './rateLimit';
+
+describe('rateLimit (Postgres-backed)', () => {
+  beforeEach(() => execute.mockReset());
+
+  it('permite cuando el contador está bajo el límite', async () => {
+    execute.mockResolvedValueOnce([{ count: 1 }]);
+    expect(await rateLimit('k', 5, 60_000)).toBe(true);
   });
 
-  it('permite la primera request', () => {
-    expect(rateLimit('test-key', 5, 60_000)).toBe(true);
+  it('permite exactamente hasta el límite', async () => {
+    execute.mockResolvedValueOnce([{ count: 5 }]);
+    expect(await rateLimit('k', 5, 60_000)).toBe(true);
   });
 
-  it('permite requests hasta el límite', () => {
-    for (let i = 0; i < 5; i++) {
-      expect(rateLimit('key-limit', 5, 60_000)).toBe(true);
-    }
+  it('bloquea cuando el contador supera el límite', async () => {
+    execute.mockResolvedValueOnce([{ count: 6 }]);
+    expect(await rateLimit('k', 5, 60_000)).toBe(false);
   });
 
-  it('bloquea la request N+1 (sobre el límite)', () => {
-    for (let i = 0; i < 5; i++) {
-      rateLimit('key-block', 5, 60_000);
-    }
-    expect(rateLimit('key-block', 5, 60_000)).toBe(false);
+  it('límite de 1 bloquea en la segunda (count=2)', async () => {
+    execute.mockResolvedValueOnce([{ count: 2 }]);
+    expect(await rateLimit('k', 1, 60_000)).toBe(false);
   });
 
-  it('bloquea todas las requests adicionales', () => {
-    for (let i = 0; i < 3; i++) {
-      rateLimit('key-extra', 3, 60_000);
-    }
-    expect(rateLimit('key-extra', 3, 60_000)).toBe(false);
-    expect(rateLimit('key-extra', 3, 60_000)).toBe(false);
+  it('hace fail-open si la BD lanza error', async () => {
+    execute.mockRejectedValueOnce(new Error('db down'));
+    expect(await rateLimit('k', 5, 60_000)).toBe(true);
   });
 
-  it('se resetea después de que la ventana expira', () => {
-    // Insertar entrada expirada manualmente
-    rateLimitMap.set('key-expired', { count: 10, resetAt: Date.now() - 1 });
-    expect(rateLimit('key-expired', 5, 60_000)).toBe(true);
-  });
-
-  it('keys diferentes tienen contadores independientes', () => {
-    for (let i = 0; i < 3; i++) {
-      rateLimit('key-a', 3, 60_000);
-    }
-    // key-a está bloqueada
-    expect(rateLimit('key-a', 3, 60_000)).toBe(false);
-    // key-b sigue libre
-    expect(rateLimit('key-b', 3, 60_000)).toBe(true);
-  });
-
-  it('límite de 1 bloquea en la segunda request', () => {
-    expect(rateLimit('key-one', 1, 60_000)).toBe(true);
-    expect(rateLimit('key-one', 1, 60_000)).toBe(false);
+  it('asume permitido si no devuelve filas', async () => {
+    execute.mockResolvedValueOnce([]);
+    expect(await rateLimit('k', 5, 60_000)).toBe(true);
   });
 });

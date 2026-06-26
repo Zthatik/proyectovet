@@ -1,26 +1,24 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { signIn } from '../../lib/auth-client';
+import { loginSchema, type LoginFormData } from '../../lib/schemas';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setError('');
-    setLoading(true);
-
     try {
-      const result = await signIn.email({
-        email,
-        password,
-      });
-
+      const result = await signIn.email({ email: data.email, password: data.password });
       if (result.error) {
         setError(result.error.message || 'Credenciales invalidas');
       } else {
@@ -28,23 +26,21 @@ export function LoginForm() {
       }
     } catch {
       setError('Error al iniciar sesion. Intente de nuevo.');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="email">Correo electronico</Label>
         <Input
           id="email"
           type="email"
           placeholder="correo@ejemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          aria-invalid={!!errors.email}
+          {...register('email')}
         />
+        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -53,10 +49,10 @@ export function LoginForm() {
           id="password"
           type="password"
           placeholder="********"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          aria-invalid={!!errors.password}
+          {...register('password')}
         />
+        {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
 
       {error && (
@@ -65,8 +61,8 @@ export function LoginForm() {
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Iniciando sesion...' : 'Iniciar sesion'}
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Iniciando sesion...' : 'Iniciar sesion'}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
