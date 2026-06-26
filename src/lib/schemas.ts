@@ -252,6 +252,7 @@ export const userUpdateSchema = z.object({
   email:    z.string().email().optional(),
   role:     z.enum(['admin', 'veterinario', 'recepcionista', 'cliente']).optional(),
   password: z.string().min(8).max(100).optional(),
+  isActive: z.boolean().optional(),
 });
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
 

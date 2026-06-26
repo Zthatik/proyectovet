@@ -45,6 +45,13 @@ export const auth = betterAuth({
         required: false,
         input: true,
       },
+      // input:false — solo se cambia desde el panel de admin (desactivar/activar).
+      isActive: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        input: false,
+      },
     },
   },
   session: {

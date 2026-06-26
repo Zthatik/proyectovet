@@ -15,6 +15,7 @@ export const users = pgTable('users', {
   image: varchar('image', { length: 512 }),
   role: userRoleEnum('role').notNull().default('cliente'),
   phone: varchar('phone', { length: 20 }),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
 });
