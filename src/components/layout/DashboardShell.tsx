@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Toaster } from 'sonner';
@@ -31,7 +32,9 @@ export function DashboardShell({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+    flushSync(() => {
+      setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+    });
     requestAnimationFrame(() => setReady(true));
   }, []);
 

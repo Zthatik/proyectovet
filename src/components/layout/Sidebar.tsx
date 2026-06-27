@@ -90,8 +90,8 @@ export function Sidebar({
       >
         {/* Header */}
         <div className={cn(
-          'flex items-center border-b border-sidebar-border shrink-0',
-          collapsed ? 'justify-center p-4' : 'justify-between p-4'
+          'flex items-center border-b border-sidebar-border shrink-0 h-14 px-4',
+          collapsed ? 'justify-center' : 'justify-between'
         )}>
           <div className={cn('flex items-center gap-3', collapsed && 'lg:justify-center')}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand text-brand-foreground shrink-0">
