@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { flushSync } from 'react-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Toaster } from 'sonner';
@@ -16,6 +15,7 @@ interface DashboardShellProps {
   pageTitle: string;
   userName: string;
   userRole: string;
+  initialCollapsed?: boolean;
   children: React.ReactNode;
 }
 
@@ -25,22 +25,26 @@ export function DashboardShell({
   pageTitle,
   userName,
   userRole,
+  initialCollapsed = false,
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // El estado inicial viene del servidor (cookie), por lo que el SSR y la
+  // hidratacion coinciden: no hay salto visual al cargar la pagina.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed);
   const [ready, setReady] = useState(false);
 
+  // Habilitamos las transiciones recien despues del primer frame, para que
+  // cualquier ajuste no dispare una animacion en la carga inicial.
   useEffect(() => {
-    flushSync(() => {
-      setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
-    });
     requestAnimationFrame(() => setReady(true));
   }, []);
 
+  // Persistimos en cookie para que el servidor pueda leerla en la proxima
+  // navegacion y renderizar el sidebar con el ancho correcto.
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed));
+    document.cookie = `sidebarCollapsed=${sidebarCollapsed}; path=/; max-age=31536000; SameSite=Lax`;
   }, [sidebarCollapsed, ready]);
 
   return (
