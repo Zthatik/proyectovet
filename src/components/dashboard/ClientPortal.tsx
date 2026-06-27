@@ -131,7 +131,6 @@ function fmtDate(d: string) {
 }
 
 type Modal =
-  | { kind: 'pet'; data: Pet }
   | { kind: 'rx'; data: Prescription }
   | { kind: 'lab'; data: LabOrder }
   | null;
@@ -208,9 +207,9 @@ export function ClientPortal({ userName }: { userName: string }) {
           ) : (
             <div className="space-y-2">
               {pets.map((pet) => (
-                <button
+                <a
                   key={pet.id}
-                  onClick={() => setModal({ kind: 'pet', data: pet })}
+                  href={`/dashboard/mascota/${pet.id}`}
                   className="w-full text-left flex items-center gap-3 border rounded-lg px-3 py-2.5 hover:bg-muted/30 transition-colors"
                 >
                   <span className="text-xl">{speciesEmoji[pet.species] || '🐾'}</span>
@@ -220,8 +219,8 @@ export function ClientPortal({ userName }: { userName: string }) {
                       {pet.breed || pet.species} · {pet.sex}{pet.weight ? ` · ${pet.weight} kg` : ''}
                     </p>
                   </div>
-                  <span className="text-xs text-primary">Ver →</span>
-                </button>
+                  <span className="text-xs text-primary">Ver ficha →</span>
+                </a>
               ))}
             </div>
           )}
@@ -371,7 +370,6 @@ export function ClientPortal({ userName }: { userName: string }) {
           >
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-lg">
-                {modal.kind === 'pet' && modal.data.name}
                 {modal.kind === 'rx' && `Receta · ${modal.data.patientName || 'Mascota'}`}
                 {modal.kind === 'lab' && (labTypeLabels[modal.data.type] || modal.data.type)}
               </h3>
@@ -379,24 +377,6 @@ export function ClientPortal({ userName }: { userName: string }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            {modal.kind === 'pet' && (
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Field label="Especie" value={modal.data.species} capitalize />
-                <Field label="Raza" value={modal.data.breed} />
-                <Field label="Sexo" value={modal.data.sex} capitalize />
-                <Field label="Color" value={modal.data.color} />
-                <Field label="Nacimiento" value={modal.data.dateOfBirth ? fmtDate(modal.data.dateOfBirth) : null} />
-                <Field label="Peso" value={modal.data.weight ? `${modal.data.weight} kg` : null} />
-                <Field label="Microchip" value={modal.data.microchipNumber} />
-                {modal.data.notes && (
-                  <div className="col-span-2">
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide">Notas</dt>
-                    <dd className="text-sm bg-muted/30 rounded-lg p-3 mt-1 whitespace-pre-wrap">{modal.data.notes}</dd>
-                  </div>
-                )}
-              </dl>
-            )}
 
             {modal.kind === 'rx' && (
               <div className="space-y-3 text-sm">
@@ -455,15 +435,6 @@ export function ClientPortal({ userName }: { userName: string }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function Field({ label, value, capitalize }: { label: string; value: string | null; capitalize?: boolean }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground uppercase tracking-wide">{label}</dt>
-      <dd className={`font-medium ${capitalize ? 'capitalize' : ''}`}>{value || '—'}</dd>
     </div>
   );
 }

@@ -40,6 +40,7 @@ const permissions: Record<UserRole, Permission[]> = {
     'appointments:create',
     'prescriptions:read:own',
     'lab-orders:read:own',
+    'vaccines:read:own',
     'invoices:read:own',
     'dashboard:read',
   ],
