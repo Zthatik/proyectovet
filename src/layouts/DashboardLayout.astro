@@ -25,6 +25,10 @@ const [freshUser] = await db.select({ name: users.name, role: users.role })
 
 const navItems = getNavItems(user.role as any);
 const currentPath = Astro.url.pathname;
+
+// Leemos el estado del sidebar desde la cookie en el servidor para renderizar
+// el SSR con el ancho correcto y evitar el salto visual en la hidratacion.
+const sidebarCollapsed = Astro.cookies.get('sidebarCollapsed')?.value === 'true';
 ---
 
 <BaseLayout title={title}>
@@ -35,6 +39,7 @@ const currentPath = Astro.url.pathname;
     pageTitle={pageTitle || title}
     userName={freshUser?.name ?? user.name}
     userRole={freshUser?.role ?? user.role}
+    initialCollapsed={sidebarCollapsed}
   >
     <slot />
   </DashboardShell>
