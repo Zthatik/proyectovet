@@ -1,11 +1,14 @@
 import nodemailer from 'nodemailer';
+import { clinic } from '../clinic';
+
+/** Remitente por defecto, derivado de la marca. SMTP_FROM lo puede sobrescribir. */
+const DEFAULT_FROM = `${clinic.name} <${clinic.email}>`;
 
 function getTransporter() {
   const host = import.meta.env.SMTP_HOST;
   const port = Number(import.meta.env.SMTP_PORT || 587);
   const user = import.meta.env.SMTP_USER;
   const pass = import.meta.env.SMTP_PASS;
-  const from = import.meta.env.SMTP_FROM || 'VetClinic <noreply@vetclinic.com>';
 
   // If no SMTP config, use Ethereal (test account) placeholder
   if (!host) {
@@ -42,15 +45,21 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
     control: 'Control', emergencia: 'Emergencia', grooming: 'Grooming',
   };
 
+  // URL absoluta del logo (los correos requieren URL pública, no data-URI).
+  const siteUrl = (import.meta.env.BETTER_AUTH_URL || '').replace(/\/$/, '');
+  const logoImg = siteUrl
+    ? `<img src="${siteUrl}${clinic.logo.main}" alt="${clinic.name}" width="120" style="display:block; margin:0 auto 4px; border-radius:8px;" />`
+    : `<h1 style="color: white; margin: 0; font-size: 22px;">${clinic.name}</h1>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: Arial, sans-serif; background: #f9fafb; margin: 0; padding: 20px;">
   <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-    <div style="background: #2563eb; padding: 24px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 22px;">🐾 VetClinic</h1>
-      <p style="color: #bfdbfe; margin: 6px 0 0; font-size: 13px;">Recordatorio de Cita</p>
+    <div style="background: #44563D; padding: 24px; text-align: center;">
+      ${logoImg}
+      <p style="color: #d7dccb; margin: 6px 0 0; font-size: 13px;">Recordatorio de Cita · ${clinic.subtitle}</p>
     </div>
     <div style="padding: 28px 24px;">
       <p style="color: #374151; font-size: 15px; margin: 0 0 20px;">Hola <strong>${data.ownerName}</strong>,</p>
@@ -77,18 +86,21 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
         </table>
       </div>
 
-      <p style="color: #6b7280; font-size: 13px; margin: 0 0 8px;">Si necesita cancelar o reprogramar, comuníquese con nosotros con anticipación.</p>
-      <p style="color: #6b7280; font-size: 13px; margin: 0;">📞 Tel: (506) 2222-2222</p>
+      <p style="color: #6b7280; font-size: 13px; margin: 0 0 16px;">Si necesita cancelar o reprogramar su visita a domicilio, escríbanos por WhatsApp con anticipación. Es nuestro único canal de agendamiento.</p>
+      <div style="text-align: center; margin: 0 0 4px;">
+        <a href="${clinic.whatsapp.link}" style="display: inline-block; background: #25D366; color: white; text-decoration: none; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 999px;">💬 ${clinic.bookingCta}</a>
+      </div>
+      <p style="color: #6b7280; font-size: 13px; text-align: center; margin: 8px 0 0;">${clinic.whatsapp.display}</p>
     </div>
     <div style="background: #f9fafb; padding: 16px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-      <p style="color: #9ca3af; font-size: 12px; margin: 0;">VetClinic — Sistema de Gestión Veterinaria</p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">${clinic.name} — ${clinic.subtitle}</p>
     </div>
   </div>
 </body>
 </html>`;
 
   try {
-    const from = import.meta.env.SMTP_FROM || 'VetClinic <noreply@vetclinic.com>';
+    const from = import.meta.env.SMTP_FROM || DEFAULT_FROM;
     await transporter.sendMail({
       from,
       to: data.ownerEmail,

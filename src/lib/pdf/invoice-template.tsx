@@ -1,12 +1,16 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer';
+import { clinic, brandColors as c } from '../clinic';
+import { ALMA_LOGO_DATA_URI } from './logo-data';
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: '#1a1a1a' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: '#2563eb' },
-  clinicName: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#2563eb' },
-  clinicSub: { fontSize: 9, color: '#6b7280', marginTop: 2 },
-  invoiceTitle: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#374151', textAlign: 'right' },
-  invoiceNum: { fontSize: 11, color: '#6b7280', textAlign: 'right', marginTop: 2 },
+  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: c.ink },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, paddingBottom: 16, borderBottomWidth: 2, borderBottomColor: c.green },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  logo: { width: 88, height: 78, objectFit: 'contain' },
+  clinicName: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: c.green },
+  clinicSub: { fontSize: 9, color: c.muted, marginTop: 2 },
+  invoiceTitle: { fontSize: 20, fontFamily: 'Helvetica-Bold', color: c.green, textAlign: 'right' },
+  invoiceNum: { fontSize: 11, color: c.muted, textAlign: 'right', marginTop: 2 },
   billTo: { marginBottom: 24 },
   sectionTitle: { fontSize: 9, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
   clientName: { fontSize: 12, fontFamily: 'Helvetica-Bold' },
@@ -25,8 +29,11 @@ const styles = StyleSheet.create({
   grandTotal: { flexDirection: 'row', width: 200, justifyContent: 'space-between', padding: '8 0', borderTopWidth: 1, borderTopColor: '#374151', marginTop: 4 },
   grandTotalText: { fontSize: 12, fontFamily: 'Helvetica-Bold' },
   status: { padding: '4 10', borderRadius: 20, fontSize: 9, fontFamily: 'Helvetica-Bold', textAlign: 'center' },
-  footer: { borderTopWidth: 1, borderTopColor: '#e5e7eb', paddingTop: 16, marginTop: 24, textAlign: 'center', fontSize: 8, color: '#9ca3af' },
-  pageNumber: { fontSize: 8, color: '#9ca3af', textAlign: 'center', marginTop: 16 },
+  footer: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 16, marginTop: 24, textAlign: 'center', fontSize: 8, color: c.mutedLight },
+  pageNumber: { fontSize: 8, color: c.mutedLight, textAlign: 'center', marginTop: 12 },
+  bookingBar: { marginTop: 16, backgroundColor: c.greenSoft, borderRadius: 6, padding: '10 14', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  bookingText: { fontSize: 9, color: c.green, fontFamily: 'Helvetica-Bold' },
+  bookingNumber: { fontSize: 9, color: c.accent, fontFamily: 'Helvetica-Bold' },
 });
 
 const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
@@ -78,11 +85,14 @@ export function InvoicePDF({ invoice: inv, items }: InvoicePDFProps) {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.clinicName}>VetClinic</Text>
-            <Text style={styles.clinicSub}>Clínica Veterinaria</Text>
-            <Text style={styles.clinicSub}>Tel: (506) 2222-2222</Text>
-            <Text style={styles.clinicSub}>admin@vetclinic.com</Text>
+          <View style={styles.headerLeft}>
+            <Image style={styles.logo} src={ALMA_LOGO_DATA_URI} />
+            <View>
+              <Text style={styles.clinicName}>{clinic.name}</Text>
+              <Text style={styles.clinicSub}>{clinic.subtitle}</Text>
+              <Text style={styles.clinicSub}>WhatsApp: {clinic.whatsapp.display}</Text>
+              <Text style={styles.clinicSub}>{clinic.email}</Text>
+            </View>
           </View>
           <View>
             <Text style={styles.invoiceTitle}>FACTURA</Text>
@@ -152,8 +162,14 @@ export function InvoicePDF({ invoice: inv, items }: InvoicePDFProps) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>Gracias por confiar en VetClinic</Text>
-          <Text style={{ marginTop: 4 }}>VetClinic — Sistema de Gestión Veterinaria</Text>
+          <Text>Gracias por confiar en {clinic.name}</Text>
+          <Text style={{ marginTop: 4 }}>{clinic.name} — {clinic.subtitle}</Text>
+        </View>
+
+        {/* Agenda por WhatsApp (único canal) */}
+        <View style={styles.bookingBar}>
+          <Text style={styles.bookingText}>{clinic.bookingCta}:</Text>
+          <Text style={styles.bookingNumber}>{clinic.whatsapp.display}</Text>
         </View>
 
         <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />

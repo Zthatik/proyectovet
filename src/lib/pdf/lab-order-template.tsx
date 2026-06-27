@@ -10,45 +10,56 @@ const styles = StyleSheet.create({
   clinicName: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: c.green },
   clinicSub: { fontSize: 9, color: c.muted, marginTop: 2 },
   clinicContact: { fontSize: 8, color: c.muted, marginTop: 1 },
-  rxBadge: { backgroundColor: c.green, color: '#ffffff', padding: '6 12', borderRadius: 4, fontSize: 16, fontFamily: 'Helvetica-Bold' },
+  docTitle: { fontSize: 15, fontFamily: 'Helvetica-Bold', color: c.green, textAlign: 'right' },
+  docNum: { fontSize: 9, color: c.muted, textAlign: 'right', marginTop: 2 },
   section: { marginBottom: 16 },
-  sectionTitle: { fontSize: 9, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
+  sectionTitle: { fontSize: 9, color: c.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
   row: { flexDirection: 'row', gap: 24, marginBottom: 8 },
   field: { flex: 1 },
-  label: { fontSize: 8, color: '#9ca3af', marginBottom: 2 },
+  label: { fontSize: 8, color: c.mutedLight, marginBottom: 2 },
   value: { fontSize: 10, fontFamily: 'Helvetica-Bold' },
-  divider: { borderBottomWidth: 1, borderBottomColor: '#e5e7eb', marginBottom: 16 },
-  medCard: { border: '1 solid #e5e7eb', borderRadius: 4, padding: '10 12', marginBottom: 8 },
-  medName: { fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 6 },
-  medGrid: { flexDirection: 'row', gap: 12 },
-  medField: { flex: 1 },
-  notes: { backgroundColor: c.cream, padding: 10, borderRadius: 4, marginTop: 8 },
+  divider: { borderBottomWidth: 1, borderBottomColor: c.border, marginBottom: 16 },
+  examCard: { border: `1 solid ${c.border}`, borderRadius: 4, padding: '12 14', marginBottom: 8 },
+  examType: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: c.green, marginBottom: 6 },
+  block: { backgroundColor: c.cream, padding: 10, borderRadius: 4, marginTop: 8 },
+  statusBadge: { padding: '3 10', borderRadius: 20, fontSize: 9, fontFamily: 'Helvetica-Bold', alignSelf: 'flex-start' },
   footer: { marginTop: 40, flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: c.border, paddingTop: 16 },
-  signatureBox: { width: 160, alignItems: 'center' },
+  signatureBox: { width: 180, alignItems: 'center' },
   signatureLine: { borderBottomWidth: 1, borderBottomColor: '#374151', width: '100%', marginBottom: 4 },
   signatureLabel: { fontSize: 8, color: c.muted, textAlign: 'center' },
-  pageNumber: { fontSize: 8, color: c.mutedLight, textAlign: 'center', marginTop: 12 },
-  statusBadge: { padding: '3 8', borderRadius: 20, fontSize: 8, fontFamily: 'Helvetica-Bold' },
   bookingBar: { marginTop: 18, backgroundColor: c.greenSoft, borderRadius: 6, padding: '10 14', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   bookingText: { fontSize: 9, color: c.green, fontFamily: 'Helvetica-Bold' },
   bookingNumber: { fontSize: 9, color: c.accent, fontFamily: 'Helvetica-Bold' },
+  pageNumber: { fontSize: 8, color: c.mutedLight, textAlign: 'center', marginTop: 12 },
 });
 
-interface PrescriptionItem {
-  medicationName: string;
-  dosage?: string | null;
-  frequency?: string | null;
-  duration?: string | null;
-  quantity?: number | null;
-  instructions?: string | null;
-}
+const typeLabels: Record<string, string> = {
+  hemograma: 'Hemograma',
+  quimica_sanguinea: 'Química Sanguínea',
+  urinalisis: 'Urianálisis',
+  coproparasitario: 'Coproparasitario',
+  radiografia: 'Radiografía',
+  ecografia: 'Ecografía',
+  cultivo: 'Cultivo y Antibiograma',
+  otro: 'Otro',
+};
 
-interface PrescriptionPDFProps {
-  prescription: {
+const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
+  solicitado: { label: 'Solicitado', bg: '#dbeafe', color: '#1d4ed8' },
+  en_proceso: { label: 'En Proceso', bg: '#fef9c3', color: '#a16207' },
+  completado: { label: 'Completado', bg: '#dcfce7', color: '#15803d' },
+  cancelado: { label: 'Cancelado', bg: '#fee2e2', color: '#b91c1c' },
+};
+
+interface LabOrderPDFProps {
+  order: {
     id: number;
-    date: string;
+    type: string;
+    description?: string | null;
     status: string;
-    notes?: string | null;
+    results?: string | null;
+    requestedAt: string;
+    completedAt?: string | null;
     patientName?: string | null;
     patientSpecies?: string | null;
     ownerFirstName?: string | null;
@@ -56,11 +67,12 @@ interface PrescriptionPDFProps {
     ownerPhone?: string | null;
     veterinarianName?: string | null;
   };
-  items: PrescriptionItem[];
 }
 
-export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProps) {
-  const date = new Date(rx.date).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
+export function LabOrderPDF({ order }: LabOrderPDFProps) {
+  const requested = new Date(order.requestedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
+  const sc = statusConfig[order.status] || statusConfig.solicitado;
+  const typeLabel = typeLabels[order.type] || order.type;
 
   return (
     <Document>
@@ -76,9 +88,9 @@ export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProp
             </View>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.rxBadge}>Rx</Text>
-            <Text style={{ fontSize: 9, color: c.muted, marginTop: 6 }}>Receta #{rx.id}</Text>
-            <Text style={{ fontSize: 9, color: c.muted }}>{date}</Text>
+            <Text style={styles.docTitle}>ORDEN DE EXÁMENES</Text>
+            <Text style={styles.docNum}>Orden #{order.id}</Text>
+            <Text style={styles.docNum}>{requested}</Text>
           </View>
         </View>
 
@@ -88,73 +100,48 @@ export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProp
           <View style={styles.row}>
             <View style={styles.field}>
               <Text style={styles.label}>PACIENTE</Text>
-              <Text style={styles.value}>{rx.patientName || '—'}</Text>
+              <Text style={styles.value}>{order.patientName || '—'}</Text>
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>ESPECIE</Text>
-              <Text style={styles.value}>{rx.patientSpecies ? rx.patientSpecies.charAt(0).toUpperCase() + rx.patientSpecies.slice(1) : '—'}</Text>
+              <Text style={styles.value}>{order.patientSpecies ? order.patientSpecies.charAt(0).toUpperCase() + order.patientSpecies.slice(1) : '—'}</Text>
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>PROPIETARIO</Text>
-              <Text style={styles.value}>{rx.ownerFirstName} {rx.ownerLastName}</Text>
+              <Text style={styles.value}>{order.ownerFirstName} {order.ownerLastName}</Text>
             </View>
-            {rx.ownerPhone && (
+            {order.ownerPhone && (
               <View style={styles.field}>
                 <Text style={styles.label}>TELÉFONO</Text>
-                <Text style={styles.value}>{rx.ownerPhone}</Text>
+                <Text style={styles.value}>{order.ownerPhone}</Text>
               </View>
             )}
           </View>
         </View>
         <View style={styles.divider} />
 
-        {/* Medications */}
+        {/* Exam */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Medicamentos Recetados</Text>
-          {items.map((item, i) => (
-            <View key={i} style={styles.medCard}>
-              <Text style={styles.medName}>{i + 1}. {item.medicationName}</Text>
-              <View style={styles.medGrid}>
-                {item.dosage && (
-                  <View style={styles.medField}>
-                    <Text style={styles.label}>DOSIS</Text>
-                    <Text>{item.dosage}</Text>
-                  </View>
-                )}
-                {item.frequency && (
-                  <View style={styles.medField}>
-                    <Text style={styles.label}>FRECUENCIA</Text>
-                    <Text>{item.frequency}</Text>
-                  </View>
-                )}
-                {item.duration && (
-                  <View style={styles.medField}>
-                    <Text style={styles.label}>DURACIÓN</Text>
-                    <Text>{item.duration}</Text>
-                  </View>
-                )}
-                {item.quantity != null && (
-                  <View style={styles.medField}>
-                    <Text style={styles.label}>CANTIDAD</Text>
-                    <Text>{item.quantity}</Text>
-                  </View>
-                )}
+          <Text style={styles.sectionTitle}>Examen Solicitado</Text>
+          <View style={styles.examCard}>
+            <Text style={styles.examType}>{typeLabel}</Text>
+            <Text style={[styles.statusBadge, { backgroundColor: sc.bg, color: sc.color }]}>{sc.label}</Text>
+            {order.description && (
+              <View style={styles.block}>
+                <Text style={styles.label}>INDICACIONES / DESCRIPCIÓN</Text>
+                <Text style={{ marginTop: 4 }}>{order.description}</Text>
               </View>
-              {item.instructions && (
-                <View style={{ marginTop: 6 }}>
-                  <Text style={styles.label}>INSTRUCCIONES</Text>
-                  <Text>{item.instructions}</Text>
-                </View>
-              )}
-            </View>
-          ))}
+            )}
+          </View>
         </View>
 
-        {/* Notes */}
-        {rx.notes && (
-          <View style={styles.notes}>
-            <Text style={styles.label}>NOTAS DEL VETERINARIO</Text>
-            <Text style={{ marginTop: 4 }}>{rx.notes}</Text>
+        {/* Results (si existen) */}
+        {order.results && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Resultados</Text>
+            <View style={styles.block}>
+              <Text style={{ lineHeight: 1.4 }}>{order.results}</Text>
+            </View>
           </View>
         )}
 
@@ -162,11 +149,11 @@ export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProp
         <View style={styles.footer}>
           <View style={styles.signatureBox}>
             <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>{rx.veterinarianName || 'Veterinario'}</Text>
+            <Text style={styles.signatureLabel}>{order.veterinarianName || 'Veterinario'}</Text>
             <Text style={styles.signatureLabel}>Médico Veterinario</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontSize: 8, color: c.mutedLight }}>Emitida el {date}</Text>
+            <Text style={{ fontSize: 8, color: c.mutedLight }}>Emitida el {requested}</Text>
             <Text style={{ fontSize: 8, color: c.mutedLight, marginTop: 2 }}>{clinic.name} — {clinic.subtitle}</Text>
           </View>
         </View>
