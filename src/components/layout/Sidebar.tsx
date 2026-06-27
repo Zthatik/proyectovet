@@ -40,6 +40,7 @@ interface SidebarProps {
   userRole: string;
   isOpen: boolean;
   collapsed?: boolean;
+  animated?: boolean;
   onClose: () => void;
 }
 
@@ -50,6 +51,7 @@ export function Sidebar({
   userRole,
   isOpen,
   collapsed = false,
+  animated = false,
   onClose,
 }: SidebarProps) {
   const handleLogout = async () => {
@@ -79,7 +81,8 @@ export function Sidebar({
       <aside
         aria-label="Navegación principal"
         className={cn(
-          'fixed top-0 left-0 z-50 h-full flex flex-col transition-all duration-200 lg:static lg:z-auto lg:translate-x-0',
+          'fixed top-0 left-0 z-50 h-full flex flex-col lg:static lg:z-auto lg:translate-x-0',
+          animated && 'transition-all duration-200',
           'bg-sidebar text-sidebar-foreground border-r border-sidebar-border',
           collapsed ? 'lg:w-16' : 'lg:w-64',
           isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'

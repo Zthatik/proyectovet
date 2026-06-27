@@ -27,14 +27,18 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('sidebarCollapsed') === 'true';
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+    requestAnimationFrame(() => setReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
+  }, [sidebarCollapsed, ready]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -45,6 +49,7 @@ export function DashboardShell({
         userRole={userRole}
         isOpen={sidebarOpen}
         collapsed={sidebarCollapsed}
+        animated={ready}
         onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
