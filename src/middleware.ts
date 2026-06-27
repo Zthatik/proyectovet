@@ -101,9 +101,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
       return context.redirect('/login?inactiva=1');
     }
 
-    // Bloquear clientes en rutas de staff (páginas de gestión interna).
+    // Bloquear tutores en rutas de staff (páginas de gestión interna).
     const role = (session.user as any).role;
-    if (role === 'cliente') {
+    if (role === 'tutor') {
       const isStaffRoute = STAFF_ROUTES.some(
         (route) => pathname === route || pathname.startsWith(route + '/')
       );

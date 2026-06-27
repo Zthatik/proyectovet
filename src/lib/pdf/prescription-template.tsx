@@ -95,7 +95,7 @@ export function PrescriptionPDF({ prescription: rx, items }: PrescriptionPDFProp
               <Text style={styles.value}>{rx.patientSpecies ? rx.patientSpecies.charAt(0).toUpperCase() + rx.patientSpecies.slice(1) : '—'}</Text>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>PROPIETARIO</Text>
+              <Text style={styles.label}>TUTOR</Text>
               <Text style={styles.value}>{rx.ownerFirstName} {rx.ownerLastName}</Text>
             </View>
             {rx.ownerPhone && (

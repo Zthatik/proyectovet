@@ -39,7 +39,7 @@ export function InvoiceForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!ownerId) { setError('Selecciona un cliente'); return; }
+    if (!ownerId) { setError('Selecciona un tutor'); return; }
     if (items.some((it) => !it.description || it.quantity < 1)) { setError('Completa todos los items'); return; }
     setLoading(true);
     setError('');
@@ -59,10 +59,10 @@ export function InvoiceForm() {
       {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
       <div>
-        <label className="block text-sm font-medium mb-1">Cliente *</label>
+        <label className="block text-sm font-medium mb-1">Tutor *</label>
         <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}
           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-          <option value="">Seleccionar cliente...</option>
+          <option value="">Seleccionar tutor...</option>
           {owners.map((o) => <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>)}
         </select>
       </div>

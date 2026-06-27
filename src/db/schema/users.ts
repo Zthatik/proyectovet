@@ -4,7 +4,7 @@ export const userRoleEnum = pgEnum('role', [
   'admin',
   'veterinario',
   'recepcionista',
-  'cliente',
+  'tutor',
 ]);
 
 export const users = pgTable('users', {
@@ -13,7 +13,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: varchar('image', { length: 512 }),
-  role: userRoleEnum('role').notNull().default('cliente'),
+  role: userRoleEnum('role').notNull().default('tutor'),
   phone: varchar('phone', { length: 20 }),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -62,4 +62,4 @@ export const verifications = pgTable('verifications', {
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type UserRole = 'admin' | 'veterinario' | 'recepcionista' | 'cliente';
+export type UserRole = 'admin' | 'veterinario' | 'recepcionista' | 'tutor';

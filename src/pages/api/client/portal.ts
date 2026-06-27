@@ -3,27 +3,28 @@ import { db } from '../../../db';
 import { owners, patients } from '../../../db/schema/patients';
 import { appointments } from '../../../db/schema/appointments';
 import { invoices } from '../../../db/schema/billing';
+import { prescriptions, prescriptionItems, labOrders } from '../../../db/schema/prescriptions';
 import { users } from '../../../db/schema/users';
-import { eq, gte, and, ne } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { eq, gte, and, ne, desc, inArray } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ locals }) => {
   const user = locals.user;
   if (!user) return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
-  if (user.role !== 'cliente') return new Response(JSON.stringify({ error: 'Acceso restringido' }), { status: 403 });
+  if (user.role !== 'tutor') return new Response(JSON.stringify({ error: 'Acceso restringido' }), { status: 403 });
 
-  // Find owner record linked to this user
+  // Ficha de tutor vinculada a esta cuenta
   const [owner] = await db.select().from(owners).where(eq(owners.userId, user.id));
   if (!owner) {
-    return new Response(JSON.stringify({ owner: null, pets: [], appointments: [], invoices: [] }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ owner: null, pets: [], appointments: [], invoices: [], prescriptions: [], labOrders: [] }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [pets, upcomingAppts, pendingInvoices] = await Promise.all([
+  const [pets, upcomingAppts, pendingInvoices, rxList, labList] = await Promise.all([
     db.select().from(patients).where(and(eq(patients.ownerId, owner.id), eq(patients.isActive, true))),
     db
       .select({
@@ -53,10 +54,65 @@ export const GET: APIRoute = async ({ locals }) => {
       .where(and(eq(invoices.ownerId, owner.id), ne(invoices.status, 'pagada')))
       .orderBy(invoices.date)
       .limit(10),
+    // Recetas de las mascotas del tutor
+    db
+      .select({
+        id: prescriptions.id,
+        date: prescriptions.date,
+        status: prescriptions.status,
+        notes: prescriptions.notes,
+        patientName: patients.name,
+        veterinarianName: users.name,
+      })
+      .from(prescriptions)
+      .innerJoin(patients, eq(prescriptions.patientId, patients.id))
+      .leftJoin(users, eq(prescriptions.veterinarianId, users.id))
+      .where(eq(patients.ownerId, owner.id))
+      .orderBy(desc(prescriptions.date))
+      .limit(20),
+    // Órdenes de examen de las mascotas del tutor
+    db
+      .select({
+        id: labOrders.id,
+        type: labOrders.type,
+        description: labOrders.description,
+        status: labOrders.status,
+        results: labOrders.results,
+        requestedAt: labOrders.requestedAt,
+        completedAt: labOrders.completedAt,
+        patientName: patients.name,
+        veterinarianName: users.name,
+      })
+      .from(labOrders)
+      .innerJoin(patients, eq(labOrders.patientId, patients.id))
+      .leftJoin(users, eq(labOrders.veterinarianId, users.id))
+      .where(eq(patients.ownerId, owner.id))
+      .orderBy(desc(labOrders.requestedAt))
+      .limit(20),
   ]);
 
+  // Adjuntar los medicamentos a cada receta
+  let prescriptionsWithItems = rxList.map((rx) => ({ ...rx, items: [] as any[] }));
+  if (rxList.length > 0) {
+    const items = await db
+      .select()
+      .from(prescriptionItems)
+      .where(inArray(prescriptionItems.prescriptionId, rxList.map((r) => r.id)));
+    prescriptionsWithItems = rxList.map((rx) => ({
+      ...rx,
+      items: items.filter((it) => it.prescriptionId === rx.id),
+    }));
+  }
+
   return new Response(
-    JSON.stringify({ owner, pets, appointments: upcomingAppts, invoices: pendingInvoices }),
+    JSON.stringify({
+      owner,
+      pets,
+      appointments: upcomingAppts,
+      invoices: pendingInvoices,
+      prescriptions: prescriptionsWithItems,
+      labOrders: labList,
+    }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 };

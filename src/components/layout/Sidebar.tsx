@@ -63,7 +63,7 @@ export function Sidebar({
     admin: 'Administrador',
     veterinario: 'Veterinario',
     recepcionista: 'Recepcionista',
-    cliente: 'Cliente',
+    tutor: 'Tutor',
   };
 
   return (

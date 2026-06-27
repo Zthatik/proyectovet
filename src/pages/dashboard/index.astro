@@ -21,10 +21,10 @@ const roleGreeting: Record<string, string> = {
   admin: 'Panel de Administración',
   veterinario: 'Panel del Veterinario',
   recepcionista: 'Panel de Recepción',
-  cliente: 'Mi Portal',
+  tutor: 'Mi Portal',
 };
 
-const isCliente = user.role === 'cliente';
+const isTutor = user.role === 'tutor';
 
 // Only load staff stats for non-client roles
 let patientCount = { count: 0 };
@@ -33,7 +33,7 @@ let productCount = { count: 0 };
 let revenue = 0;
 let todayRoute: { id: number; scheduledAt: Date; type: string; status: string; visitAddress: string | null; patientName: string | null; ownerFirstName: string | null; ownerLastName: string | null; }[] = [];
 
-if (!isCliente) {
+if (!isTutor) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -89,13 +89,13 @@ const statusColors: Record<string, string> = {
         <div class="text-center sm:text-left sm:border-l border-border sm:pl-5">
           <h2 class="text-xl font-semibold">Bienvenido, {user.name}</h2>
           <p class="text-muted-foreground text-sm mt-1">
-            {isCliente ? 'Aquí puedes ver tus mascotas, citas y facturas.' : 'Aquí tienes un resumen de hoy.'}
+            {isTutor ? 'Aquí puedes ver tus mascotas, citas y facturas.' : 'Aquí tienes un resumen de hoy.'}
           </p>
         </div>
       </div>
     </div>
 
-    {isCliente ? (
+    {isTutor ? (
       <ClientPortal client:load userName={user.name} />
     ) : (
       <>

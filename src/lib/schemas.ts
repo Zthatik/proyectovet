@@ -14,7 +14,7 @@ export type OwnerInput = z.infer<typeof ownerSchema>;
 
 // ── Patients ─────────────────────────────────────────────────────────────────
 export const patientSchema = z.object({
-  ownerId:         z.number().int().positive('Dueño requerido'),
+  ownerId:         z.number().int().positive('Tutor requerido'),
   name:            z.string().min(1, 'Nombre requerido').max(100),
   species:         z.enum(['perro', 'gato', 'ave', 'conejo', 'reptil', 'otro']),
   breed:           z.string().max(100).optional().nullable(),
@@ -31,7 +31,7 @@ export type PatientInput = z.infer<typeof patientSchema>;
 // ── Appointments ─────────────────────────────────────────────────────────────
 export const appointmentSchema = z.object({
   patientId:       z.number().int().positive('Paciente requerido'),
-  ownerId:         z.number().int().positive('Dueño requerido'),
+  ownerId:         z.number().int().positive('Tutor requerido'),
   veterinarianId:  z.string().min(1, 'Veterinario requerido'),
   scheduledAt:     z.string().min(1, 'Fecha requerida'),
   endAt:           z.string().min(1, 'Hora de fin requerida'),
@@ -118,7 +118,7 @@ export const invoiceItemSchema = z.object({
 });
 
 export const invoiceSchema = z.object({
-  ownerId:  z.number().int().positive('Dueño requerido'),
+  ownerId:  z.number().int().positive('Tutor requerido'),
   taxRate:  z.number().min(0).max(100).default(0),
   discount: z.number().min(0).default(0),
   notes:    z.string().max(500).optional().nullable(),
@@ -151,7 +151,7 @@ export const ownerFormSchema = z.object({
 export type OwnerFormData = z.infer<typeof ownerFormSchema>;
 
 export const patientFormSchema = z.object({
-  ownerId:         z.string().min(1, 'Selecciona un dueño'),
+  ownerId:         z.string().min(1, 'Selecciona un tutor'),
   name:            z.string().min(1, 'El nombre es requerido').max(100),
   species:         z.enum(['perro', 'gato', 'ave', 'reptil', 'roedor', 'otro']),
   sex:             z.enum(['macho', 'hembra']),
@@ -250,7 +250,7 @@ export type LabOrderUpdateInput = z.infer<typeof labOrderUpdateSchema>;
 export const userUpdateSchema = z.object({
   name:     z.string().min(1).max(200).optional(),
   email:    z.string().email().optional(),
-  role:     z.enum(['admin', 'veterinario', 'recepcionista', 'cliente']).optional(),
+  role:     z.enum(['admin', 'veterinario', 'recepcionista', 'tutor']).optional(),
   password: z.string().min(8).max(100).optional(),
   isActive: z.boolean().optional(),
 });
