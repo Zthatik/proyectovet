@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FlaskConical, Plus, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { FlaskConical, Plus, CheckCircle, Clock, XCircle, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -159,12 +159,24 @@ export function LabOrderList({ canWrite = false }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => { setSelected(order); setResults(order.results || ''); }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Ver / Actualizar
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <a
+                          href={`/api/lab-orders/${order.id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                          title="Descargar PDF"
+                        >
+                          <FileDown className="h-3.5 w-3.5" />
+                          PDF
+                        </a>
+                        <button
+                          onClick={() => { setSelected(order); setResults(order.results || ''); }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Ver / Actualizar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -180,7 +192,18 @@ export function LabOrderList({ canWrite = false }: Props) {
           <div className="bg-card rounded-xl border w-full max-w-lg p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-lg">{typeLabels[selected.type] || selected.type}</h3>
-              <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`/api/lab-orders/${selected.id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium hover:bg-muted/50 transition-colors"
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  Descargar PDF
+                </a>
+                <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+              </div>
             </div>
 
             <dl className="grid grid-cols-2 gap-3 text-sm">

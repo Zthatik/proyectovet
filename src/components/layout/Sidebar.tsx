@@ -94,8 +94,8 @@ export function Sidebar({
           collapsed ? 'justify-center' : 'justify-between'
         )}>
           <div className={cn('flex items-center gap-3', collapsed && 'lg:justify-center')}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-brand text-brand-foreground shrink-0">
-              <PawPrint size={18} />
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white shrink-0 flex items-center justify-center">
+              <img src="/logo-alma-mark.png" alt="Alma Veterinaria" className="w-full h-full object-contain" />
             </div>
             {!collapsed && <span className="font-bold text-lg whitespace-nowrap">Alma Veterinaria</span>}
           </div>
