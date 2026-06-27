@@ -88,25 +88,29 @@ export function Sidebar({
           isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'
         )}
       >
-        {/* Header */}
-        <div className={cn(
-          'flex items-center border-b border-sidebar-border shrink-0 h-14 px-4',
-          collapsed ? 'justify-center' : 'justify-between'
-        )}>
-          <div className={cn('flex items-center gap-3', collapsed && 'lg:justify-center')}>
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white shrink-0 flex items-center justify-center">
+        {/* Header / Logo */}
+        {collapsed ? (
+          <div className="flex items-center justify-center border-b border-sidebar-border shrink-0 h-14 px-2">
+            <div className="w-9 h-9 rounded-lg overflow-hidden bg-white flex items-center justify-center">
               <img src="/logo-alma-mark.png" alt="Alma Veterinaria" className="w-full h-full object-contain" />
             </div>
-            {!collapsed && <span className="font-bold text-lg whitespace-nowrap">Alma Veterinaria</span>}
           </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-1 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-white/10 transition-colors"
-            aria-label="Cerrar menú"
-          >
-            <X size={20} />
-          </button>
-        </div>
+        ) : (
+          <div className="border-b border-sidebar-border shrink-0 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 bg-white rounded-xl p-2.5 flex items-center justify-center">
+                <img src="/logoAlmaVet.jpg" alt="Alma Veterinaria" className="h-20 w-auto object-contain" />
+              </div>
+              <button
+                onClick={onClose}
+                className="lg:hidden p-1 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-white/10 transition-colors"
+                aria-label="Cerrar menú"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav aria-label="Menú principal" className="flex-1 p-2 space-y-1 overflow-y-auto">
