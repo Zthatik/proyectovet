@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { PawPrint, Calendar, Receipt, MapPin, Phone, Mail, AlertCircle, FileText, FlaskConical, X } from 'lucide-react';
+import { PawPrint, Calendar, Receipt, MapPin, Phone, Mail, AlertCircle, FileText, FlaskConical, X, HelpCircle } from 'lucide-react';
+import { WhatsappCta } from '../common/WhatsappCta';
 
 interface Owner {
   id: number;
@@ -135,7 +136,7 @@ type Modal =
   | { kind: 'lab'; data: LabOrder }
   | null;
 
-export function ClientPortal({ userName }: { userName: string }) {
+export function ClientPortal() {
   const [data, setData] = useState<PortalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<Modal>(null);
@@ -173,24 +174,48 @@ export function ClientPortal({ userName }: { userName: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Greeting + owner info */}
+      {/* Guía de uso + datos de contacto */}
       <div className="rounded-xl border bg-card p-6">
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Hola, {owner.firstName}!</h2>
-            <p className="text-sm text-muted-foreground">Aquí puedes ver toda la información de tus mascotas.</p>
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+            <HelpCircle className="h-5 w-5 text-primary" />
           </div>
-          <div className="text-sm text-muted-foreground space-y-1">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold">Cómo usar tu portal</h3>
+            <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+              <li className="flex gap-2">
+                <PawPrint className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <span>Toca el nombre de una mascota para ver su <strong className="text-foreground font-medium">ficha completa</strong>: vacunas, recetas, exámenes e historial de visitas.</span>
+              </li>
+              <li className="flex gap-2">
+                <Calendar className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <span>Más abajo verás tus <strong className="text-foreground font-medium">próximas citas</strong>. Para agendar o cambiar una hora, escríbenos por WhatsApp.</span>
+              </li>
+              <li className="flex gap-2">
+                <FileText className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <span>Toca una <strong className="text-foreground font-medium">receta</strong> o un <strong className="text-foreground font-medium">examen</strong> para ver los detalles y resultados.</span>
+              </li>
+            </ul>
+            <div className="mt-4">
+              <WhatsappCta variant="button" />
+            </div>
+          </div>
+        </div>
+
+        {/* Datos de contacto del tutor */}
+        <div className="mt-5 pt-4 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {owner.phone && (
-              <div className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> {owner.phone}</div>
+              <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> {owner.phone}</span>
             )}
             {owner.email && (
-              <div className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {owner.email}</div>
+              <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {owner.email}</span>
             )}
             {owner.address && (
-              <div className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {owner.address}</div>
+              <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {owner.address}</span>
             )}
           </div>
+          <p className="text-xs text-muted-foreground">¿Algún dato incorrecto? Avísanos por WhatsApp.</p>
         </div>
       </div>
 
@@ -205,7 +230,9 @@ export function ClientPortal({ userName }: { userName: string }) {
           {pets.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no tienes mascotas asignadas. La clínica las vinculará a tu perfil.</p>
           ) : (
-            <div className="space-y-2">
+            <>
+              <p className="text-xs text-muted-foreground mb-3">👉 Toca una mascota para ver toda su información.</p>
+              <div className="space-y-2">
               {pets.map((pet) => (
                 <a
                   key={pet.id}
@@ -222,7 +249,8 @@ export function ClientPortal({ userName }: { userName: string }) {
                   <span className="text-xs text-primary">Ver ficha →</span>
                 </a>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -233,9 +261,11 @@ export function ClientPortal({ userName }: { userName: string }) {
             <h3 className="font-semibold">Próximas Citas</h3>
           </div>
           {appointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tienes citas próximas programadas.</p>
+            <p className="text-sm text-muted-foreground">No tienes citas próximas. Cuando agendes por WhatsApp, aparecerán aquí.</p>
           ) : (
-            <div className="space-y-2">
+            <>
+              <p className="text-xs text-muted-foreground mb-3">📅 Para agendar o reprogramar, escríbenos por WhatsApp.</p>
+              <div className="space-y-2">
               {appointments.map((appt) => (
                 <div key={appt.id} className="block border rounded-lg px-3 py-2.5">
                   <div className="flex items-center justify-between gap-2">
@@ -258,7 +288,8 @@ export function ClientPortal({ userName }: { userName: string }) {
                   )}
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -274,7 +305,9 @@ export function ClientPortal({ userName }: { userName: string }) {
           {prescriptions.length === 0 ? (
             <p className="text-sm text-muted-foreground">No hay recetas registradas.</p>
           ) : (
-            <div className="space-y-2">
+            <>
+              <p className="text-xs text-muted-foreground mb-3">👉 Toca una receta para ver los medicamentos y cómo darlos.</p>
+              <div className="space-y-2">
               {prescriptions.map((rx) => (
                 <button
                   key={rx.id}
@@ -292,7 +325,8 @@ export function ClientPortal({ userName }: { userName: string }) {
                   </p>
                 </button>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -306,7 +340,9 @@ export function ClientPortal({ userName }: { userName: string }) {
           {labOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">No hay órdenes de examen registradas.</p>
           ) : (
-            <div className="space-y-2">
+            <>
+              <p className="text-xs text-muted-foreground mb-3">👉 Toca un examen para ver sus resultados e indicaciones.</p>
+              <div className="space-y-2">
               {labOrders.map((lo) => (
                 <button
                   key={lo.id}
@@ -324,7 +360,8 @@ export function ClientPortal({ userName }: { userName: string }) {
                   </p>
                 </button>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>
