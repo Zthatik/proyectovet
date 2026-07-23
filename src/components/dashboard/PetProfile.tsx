@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   ArrowLeft, Calendar, Syringe, FileText, FlaskConical, MapPin, X,
-  PawPrint, Cake, Scale, Fingerprint, Mars, Venus,
+  PawPrint, Cake, Scale, Fingerprint, Mars, Venus, Download,
 } from 'lucide-react';
 
 interface RxItem {
@@ -222,6 +222,16 @@ export function PetProfile({ pet }: { pet: Pet }) {
               <Stat icon={Scale} label="Peso" value={pet.weight ? `${pet.weight} kg` : '—'} />
               <Stat icon={PawPrint} label="Especie" value={pet.species} capitalize />
               <Stat icon={Fingerprint} label="Microchip" value={pet.microchipNumber || '—'} />
+            </div>
+            <div className="mt-4 flex justify-center sm:justify-start">
+              <a
+                href={`/api/patients/${pet.id}/vaccine-card`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border hover:bg-muted/40 transition-colors"
+              >
+                <Download className="h-3.5 w-3.5" /> Descargar carnet de vacunas
+              </a>
             </div>
             {pet.notes && (
               <div className="mt-4 text-sm bg-muted/40 rounded-lg p-3 text-left">
