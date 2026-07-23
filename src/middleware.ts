@@ -5,7 +5,7 @@ import { jsonError } from './lib/http';
 import { STAFF_ROUTES } from './lib/permissions';
 
 // '/api/cron' se autentica por su cuenta con CRON_SECRET (Bearer), no por sesión.
-const publicRoutes = ['/', '/login', '/register', '/api/auth', '/api/cron'];
+const publicRoutes = ['/', '/login', '/register', '/recuperar-contrasena', '/restablecer-contrasena', '/api/auth', '/api/cron'];
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some(

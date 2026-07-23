@@ -44,7 +44,12 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Contrasena</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Contrasena</Label>
+          <a href="/recuperar-contrasena" className="text-xs text-primary hover:underline">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
         <Input
           id="password"
           type="password"
