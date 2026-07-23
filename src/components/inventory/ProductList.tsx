@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Package, Eye, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Package, Eye, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
+import { Button } from '../ui/button';
 
 interface Product {
   id: number;
@@ -75,19 +78,27 @@ export function ProductList() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="rounded-xl border overflow-hidden">
+          <div className="bg-muted/50 p-3"><Skeleton className="h-4 w-32" /></div>
+          <div className="divide-y">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-24 hidden sm:block" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-red-500 mb-3">{error}</p>
-          <button onClick={fetchProducts} className="text-sm text-primary hover:underline">Reintentar</button>
-        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title={error}
+          action={<Button variant="outline" size="sm" onClick={fetchProducts}>Reintentar</Button>}
+        />
       ) : products.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No se encontraron productos</p>
-        </div>
+        <EmptyState icon={Package} title="No se encontraron productos" />
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">

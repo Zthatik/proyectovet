@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, PawPrint, Dog, Cat, Bird, Rabbit, FileText, CalendarPlus, type LucideIcon } from 'lucide-react';
+import { Search, Plus, PawPrint, Dog, Cat, Bird, Rabbit, FileText, CalendarPlus, AlertCircle, type LucideIcon } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
+import { Button } from '../ui/button';
 
 interface Patient {
   id: number;
@@ -99,25 +102,23 @@ export function PatientList() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl border overflow-hidden animate-pulse">
-              <div className="h-28 bg-muted" />
+            <div key={i} className="rounded-xl border overflow-hidden">
+              <Skeleton className="h-28 rounded-none" />
               <div className="p-3 space-y-2">
-                <div className="h-3.5 bg-muted rounded w-2/3" />
-                <div className="h-3 bg-muted rounded w-full" />
+                <Skeleton className="h-3.5 w-2/3" />
+                <Skeleton className="h-3 w-full" />
               </div>
             </div>
           ))}
         </div>
       ) : error ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-destructive mb-3">{error}</p>
-          <button onClick={fetchPatients} className="text-sm text-primary hover:underline">Reintentar</button>
-        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title={error}
+          action={<Button variant="outline" size="sm" onClick={fetchPatients}>Reintentar</Button>}
+        />
       ) : visible.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <PawPrint className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No se encontraron pacientes</p>
-        </div>
+        <EmptyState icon={PawPrint} title="No se encontraron pacientes" />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {visible.map((p) => {

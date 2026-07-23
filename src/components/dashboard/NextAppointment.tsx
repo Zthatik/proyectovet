@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Clock, MapPin, Navigation } from 'lucide-react';
+import { Clock, MapPin, Navigation, CalendarX } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 
 interface Appointment {
   id: number;
@@ -67,8 +69,8 @@ export function NextAppointment() {
   if (loading) {
     return (
       <div className="rounded-xl border bg-card p-6">
-        <div className="h-5 w-40 rounded bg-muted animate-pulse mb-3" />
-        <div className="h-20 rounded-lg bg-muted animate-pulse" />
+        <Skeleton className="h-5 w-40 mb-3" />
+        <Skeleton className="h-20 rounded-lg" />
       </div>
     );
   }
@@ -80,7 +82,7 @@ export function NextAppointment() {
           <Clock className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">Próxima Cita</h3>
         </div>
-        <p className="text-sm text-muted-foreground">No hay citas próximas programadas.</p>
+        <EmptyState icon={CalendarX} title="No hay citas próximas programadas" className="py-6" />
       </div>
     );
   }

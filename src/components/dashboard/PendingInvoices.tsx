@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Receipt } from 'lucide-react';
+import { Receipt, CheckCircle2 } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 
 interface Invoice {
   id: number;
@@ -42,9 +44,9 @@ export function PendingInvoices() {
   if (loading) {
     return (
       <div className="rounded-xl border bg-card p-6">
-        <div className="h-5 w-44 rounded bg-muted animate-pulse mb-3" />
+        <Skeleton className="h-5 w-44 mb-3" />
         <div className="space-y-2">
-          {[1, 2].map((i) => <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />)}
+          {[1, 2].map((i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
       </div>
     );
@@ -67,7 +69,7 @@ export function PendingInvoices() {
       </div>
 
       {invoices.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay facturas pendientes de cobro.</p>
+        <EmptyState icon={CheckCircle2} title="No hay facturas pendientes de cobro" className="py-6" />
       ) : (
         <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
           {invoices.map((inv) => (
