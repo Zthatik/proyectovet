@@ -14,8 +14,14 @@ interface Patient {
   ownerAddress?: string;
 }
 
+interface Veterinarian {
+  id: string;
+  name: string;
+}
+
 export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { data: session } = authClient.useSession();
@@ -29,10 +35,16 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
 
   useEffect(() => {
     fetch('/api/patients').then((r) => r.json()).then(setPatients);
+    fetch('/api/veterinarians').then((r) => r.json()).then(setVeterinarians);
   }, []);
 
+  // Preselecciona al veterinario en sesión (si es uno), pero el campo queda
+  // visible y editable para cuando recepción agenda a nombre de otro vet.
   useEffect(() => {
-    if (session?.user?.id) setValue('veterinarianId', session.user.id);
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (session?.user?.id && role === 'veterinario') {
+      setValue('veterinarianId', session.user.id);
+    }
   }, [session]);
 
   useEffect(() => {
@@ -91,7 +103,16 @@ export function AppointmentForm({ appointmentId }: { appointmentId?: number }) {
           </select>
         </div>
 
-        <input type="hidden" {...register('veterinarianId')} />
+        <div>
+          <label className="block text-sm font-medium mb-1">Veterinario *</label>
+          <select {...register('veterinarianId')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            <option value="">Seleccionar veterinario...</option>
+            {veterinarians.map((v) => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+          {errors.veterinarianId && <p className="text-red-500 text-xs mt-1">{errors.veterinarianId.message}</p>}
+        </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Fecha y hora inicio *</label>

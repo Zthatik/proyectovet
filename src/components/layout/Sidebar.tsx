@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Users,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ const iconMap: Record<string, LucideIcon> = {
   Receipt,
   BarChart3,
   Settings,
+  Users,
 };
 
 interface NavItem {

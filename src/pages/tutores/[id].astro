@@ -1,0 +1,132 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { OwnerInviteButton } from '../../components/patients/OwnerInviteButton';
+import { db } from '../../db';
+import { owners, patients } from '../../db/schema/patients';
+import { invoices } from '../../db/schema/billing';
+import { eq, desc } from 'drizzle-orm';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [owner] = await db.select().from(owners).where(eq(owners.id, id));
+if (!owner) return Astro.redirect('/tutores');
+
+const ownerPatients = await db.select().from(patients).where(eq(patients.ownerId, id)).orderBy(desc(patients.createdAt));
+const ownerInvoices = await db.select().from(invoices).where(eq(invoices.ownerId, id)).orderBy(desc(invoices.date)).limit(20);
+
+const speciesEmoji: Record<string, string> = { perro: '🐕', gato: '🐈', ave: '🐦', reptil: '🦎', roedor: '🐭', conejo: '🐰', otro: '🐾' };
+const invoiceStatusColors: Record<string, string> = {
+  borrador: 'bg-gray-100 text-gray-600', emitida: 'bg-blue-100 text-blue-700',
+  pagada: 'bg-green-100 text-green-700', parcial: 'bg-yellow-100 text-yellow-700', anulada: 'bg-red-100 text-red-700',
+};
+const invoiceStatusLabels: Record<string, string> = {
+  borrador: 'Borrador', emitida: 'Emitida', pagada: 'Pagada', parcial: 'Pago parcial', anulada: 'Anulada',
+};
+
+const totalBilled = ownerInvoices.reduce((sum, inv) => sum + parseFloat(inv.total), 0);
+const canEdit = user.role === 'admin' || user.role === 'recepcionista';
+---
+
+<DashboardLayout title={`${owner.firstName} ${owner.lastName}`} pageTitle={`Tutor: ${owner.firstName} ${owner.lastName}`}>
+  <div class="mb-4">
+    <a href="/tutores" class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a Tutores</a>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Info principal -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="rounded-xl border bg-card p-6">
+        <div class="w-16 h-16 rounded-full bg-brand text-brand-foreground flex items-center justify-center text-xl font-bold mb-4">
+          {owner.firstName[0]}{owner.lastName[0]}
+        </div>
+        <h2 class="text-xl font-bold">{owner.firstName} {owner.lastName}</h2>
+
+        <dl class="mt-4 space-y-2 text-sm">
+          {owner.email && <div class="flex justify-between gap-2"><dt class="text-muted-foreground shrink-0">Email</dt><dd class="text-right truncate">{owner.email}</dd></div>}
+          {owner.phone && <div class="flex justify-between"><dt class="text-muted-foreground">Teléfono</dt><dd>{owner.phone}</dd></div>}
+          {owner.documentId && <div class="flex justify-between"><dt class="text-muted-foreground">Documento</dt><dd>{owner.documentId}</dd></div>}
+          {owner.address && <div class="flex justify-between gap-2"><dt class="text-muted-foreground shrink-0">Dirección</dt><dd class="text-right">{owner.address}</dd></div>}
+        </dl>
+
+        {canEdit && (
+          <div class="mt-4 flex gap-2">
+            <a href={`/tutores/${id}/editar`} class="flex-1 text-center text-sm px-3 py-2 rounded-lg border hover:bg-muted transition-colors">Editar</a>
+            <a href={`/pacientes/nuevo?ownerId=${id}`} class="flex-1 text-center text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">+ Mascota</a>
+          </div>
+        )}
+      </div>
+
+      <!-- Cuenta del portal -->
+      {canEdit && (
+        <div class="rounded-xl border bg-card p-6">
+          <h3 class="font-semibold mb-3">Acceso al portal</h3>
+          {owner.userId ? (
+            <p class="text-sm text-success flex items-center gap-1.5">✓ Cuenta vinculada — puede iniciar sesión y ver sus mascotas.</p>
+          ) : (
+            <>
+              <p class="text-sm text-muted-foreground mb-3">Este tutor aún no tiene cuenta. Genera un link de invitación y compártelo por WhatsApp para que active su portal.</p>
+              <OwnerInviteButton client:load ownerId={id} ownerName={owner.firstName} ownerPhone={owner.phone} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+
+    <!-- Mascotas y facturación -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="rounded-xl border bg-card p-6">
+        <h3 class="font-semibold mb-4">Mascotas ({ownerPatients.length})</h3>
+        {ownerPatients.length === 0 ? (
+          <p class="text-sm text-muted-foreground">Sin mascotas registradas.</p>
+        ) : (
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {ownerPatients.map((p) => (
+              <a href={`/pacientes/${p.id}`} class="flex items-center gap-3 border rounded-lg p-3 hover:bg-muted/30 transition-colors">
+                <span class="text-2xl">{speciesEmoji[p.species] || '🐾'}</span>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium truncate">{p.name}</p>
+                  <p class="text-xs text-muted-foreground capitalize">{p.species}{p.breed ? ` · ${p.breed}` : ''}{!p.isActive ? ' · inactivo' : ''}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="rounded-xl border bg-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">Facturación</h3>
+          {ownerInvoices.length > 0 && (
+            <span class="text-xs bg-muted px-2 py-0.5 rounded-full font-medium">
+              Total: ${totalBilled.toLocaleString('es-CL')}
+            </span>
+          )}
+        </div>
+        {ownerInvoices.length === 0 ? (
+          <p class="text-sm text-muted-foreground">Sin facturas registradas.</p>
+        ) : (
+          <div class="space-y-2">
+            {ownerInvoices.map((inv) => (
+              <a href={`/facturacion/${inv.id}`} class="flex items-center justify-between border rounded-lg p-3 hover:bg-muted/30 transition-colors">
+                <div>
+                  <span class="text-sm font-mono font-medium">{inv.invoiceNumber}</span>
+                  <span class="text-xs text-muted-foreground ml-2">{format(new Date(inv.date), 'dd/MM/yyyy', { locale: es })}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class={`text-xs px-2 py-0.5 rounded-full font-medium ${invoiceStatusColors[inv.status] || 'bg-gray-100'}`}>
+                    {invoiceStatusLabels[inv.status] || inv.status}
+                  </span>
+                  <span class="text-sm font-semibold">${parseFloat(inv.total).toLocaleString('es-CL')}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</DashboardLayout>

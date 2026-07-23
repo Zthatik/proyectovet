@@ -4,8 +4,9 @@ import { owners, patients } from '../../../db/schema/patients';
 import { appointments } from '../../../db/schema/appointments';
 import { invoices } from '../../../db/schema/billing';
 import { prescriptions, prescriptionItems, labOrders } from '../../../db/schema/prescriptions';
+import { patientCoOwners } from '../../../db/schema/co-owners';
 import { users } from '../../../db/schema/users';
-import { eq, gte, and, ne, desc, inArray } from 'drizzle-orm';
+import { eq, gte, and, ne, desc, inArray, or } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ locals }) => {
   const user = locals.user;
@@ -24,8 +25,18 @@ export const GET: APIRoute = async ({ locals }) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Mascotas donde este tutor es co-tutor (además de las que le pertenecen
+  // directamente), para que una pareja/familia pueda compartir el acceso.
+  const coOwnedRows = await db.select({ patientId: patientCoOwners.patientId }).from(patientCoOwners).where(eq(patientCoOwners.ownerId, owner.id));
+  const coOwnedIds = coOwnedRows.map((r) => r.patientId);
+
   const [pets, upcomingAppts, pendingInvoices, rxList, labList] = await Promise.all([
-    db.select().from(patients).where(and(eq(patients.ownerId, owner.id), eq(patients.isActive, true))),
+    db.select().from(patients).where(
+      and(
+        eq(patients.isActive, true),
+        coOwnedIds.length > 0 ? or(eq(patients.ownerId, owner.id), inArray(patients.id, coOwnedIds)) : eq(patients.ownerId, owner.id),
+      ),
+    ),
     db
       .select({
         id: appointments.id,

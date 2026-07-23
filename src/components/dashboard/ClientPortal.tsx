@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { PawPrint, Calendar, Receipt, MapPin, Phone, Mail, AlertCircle, FileText, FlaskConical, X, HelpCircle } from 'lucide-react';
 import { WhatsappCta } from '../common/WhatsappCta';
+import { EditContactDialog } from './EditContactDialog';
+import { AddPetDialog } from './AddPetDialog';
 
 interface Owner {
   id: number;
@@ -141,12 +143,14 @@ export function ClientPortal() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<Modal>(null);
 
-  useEffect(() => {
+  function load() {
     fetch('/api/client/portal')
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
 
   if (loading) {
     return (
@@ -215,7 +219,7 @@ export function ClientPortal() {
               <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {owner.address}</span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">¿Algún dato incorrecto? Avísanos por WhatsApp.</p>
+          <EditContactDialog phone={owner.phone} address={owner.address} onSaved={load} />
         </div>
       </div>
 
@@ -225,10 +229,16 @@ export function ClientPortal() {
           <div className="flex items-center gap-2 mb-4">
             <PawPrint className="h-5 w-5 text-primary" />
             <h3 className="font-semibold">Mis Mascotas</h3>
-            <span className="ml-auto text-xs text-muted-foreground">{pets.length} registradas</span>
+            <span className="text-xs text-muted-foreground">{pets.length} registradas</span>
+            <div className="ml-auto">
+              <AddPetDialog onSaved={load} />
+            </div>
           </div>
           {pets.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no tienes mascotas asignadas. La clínica las vinculará a tu perfil.</p>
+            <div className="text-center py-2">
+              <p className="text-sm text-muted-foreground mb-3">Aún no tienes mascotas registradas.</p>
+              <AddPetDialog onSaved={load} />
+            </div>
           ) : (
             <>
               <p className="text-xs text-muted-foreground mb-3">👉 Toca una mascota para ver toda su información.</p>

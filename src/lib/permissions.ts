@@ -77,6 +77,7 @@ export function requiresOwnershipCheck(role: UserRole, resource: string, action:
 // Páginas exclusivas de staff — un tutor nunca debe acceder a ellas
 export const STAFF_ROUTES = [
   '/pacientes',
+  '/tutores',
   '/citas',
   '/recetas',
   '/ordenes',
@@ -99,6 +100,7 @@ export function getNavItems(role: UserRole) {
   const allItems = [
     { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', permission: 'dashboard:read' },
     { label: 'Pacientes', href: '/pacientes', icon: 'PawPrint', permission: 'patients:read' },
+    { label: 'Tutores', href: '/tutores', icon: 'Users', permission: 'owners:read' },
     { label: 'Citas', href: '/citas', icon: 'Calendar', permission: 'appointments:read' },
     { label: 'Recetas', href: '/recetas', icon: 'FileText', permission: 'prescriptions:read' },
     { label: 'Laboratorio', href: '/ordenes', icon: 'FlaskConical', permission: 'lab-orders:read' },
