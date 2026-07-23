@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-interface FormData { type: 'entrada' | 'salida' | 'ajuste'; quantity: string; reason: string; }
+interface FormData { type: 'entrada' | 'salida' | 'ajuste' | 'consumo_interno'; quantity: string; reason: string; }
 
 export function StockForm({ productId }: { productId: number }) {
   const [loading, setLoading] = useState(false);
@@ -35,13 +35,15 @@ export function StockForm({ productId }: { productId: number }) {
         <select {...register('type')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
           <option value="entrada">Entrada (agregar stock)</option>
           <option value="salida">Salida (reducir stock)</option>
+          <option value="consumo_interno">Consumo interno (usado en la clínica)</option>
           <option value="ajuste">Ajuste</option>
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-1">Cantidad</label>
-        <input type="number" min="1" {...register('quantity')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <input type="number" step="any" min="0.001" {...register('quantity')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <p className="text-xs text-muted-foreground mt-1">Admite decimales (ej. 1.5 ml).</p>
       </div>
 
       <div>

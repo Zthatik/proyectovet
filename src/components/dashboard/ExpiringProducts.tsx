@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Package, PackageCheck } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { EmptyState } from '../ui/empty-state';
+import { formatQty } from '../../lib/utils';
 
 interface Product {
   id: number;
   name: string;
   expirationDate: string | null;
-  stock: number;
+  stock: string;
   category: string | null;
 }
 
@@ -89,7 +90,7 @@ function ProductRow({ product, variant }: { product: Product; variant: 'expired'
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{product.name}</p>
-        <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
+        <p className="text-xs text-muted-foreground">Stock: {formatQty(product.stock)}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0 ml-2">
         {isExpired && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}

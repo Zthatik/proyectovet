@@ -80,12 +80,13 @@ export function ProductForm({ productId }: { productId?: number }) {
 
         <div>
           <label className="block text-sm font-medium mb-1">Stock inicial</label>
-          <input type="number" {...register('stock')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <input type="number" step="any" min="0" {...register('stock')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <p className="text-xs text-muted-foreground mt-1">Admite decimales (ej. 100 ml, 0.5 unidades).</p>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Stock mínimo (alerta)</label>
-          <input type="number" {...register('minStock')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <input type="number" step="any" min="0" {...register('minStock')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
 
         <div>

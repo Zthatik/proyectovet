@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { Plus, Trash2 } from 'lucide-react';
 import { medicalRecordFormSchema, type MedicalRecordFormData } from '../../lib/schemas';
+import { formatQty } from '../../lib/utils';
 
 interface Patient { id: number; name: string; ownerFirstName?: string; ownerLastName?: string; }
+interface Product { id: number; name: string; unit: string; stock: string; }
+interface SupplyRow { productId: string; quantity: string; }
 
 export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: number; appointmentId?: number }) {
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [supplies, setSupplies] = useState<SupplyRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,9 +24,21 @@ export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: nu
 
   useEffect(() => {
     fetch('/api/patients').then((r) => r.json()).then(setPatients);
+    fetch('/api/inventory').then((r) => r.json()).then(setProducts);
   }, []);
 
+  function addSupply() { setSupplies([...supplies, { productId: '', quantity: '' }]); }
+  function removeSupply(i: number) { setSupplies(supplies.filter((_, idx) => idx !== i)); }
+  function updateSupply(i: number, field: keyof SupplyRow, value: string) {
+    const updated = [...supplies];
+    updated[i] = { ...updated[i], [field]: value };
+    setSupplies(updated);
+  }
+
   async function onSubmit(data: MedicalRecordFormData) {
+    const invalidSupply = supplies.some((s) => s.productId && (!s.quantity || Number(s.quantity) <= 0));
+    if (invalidSupply) { setError('Cada insumo usado debe tener una cantidad mayor a 0'); return; }
+
     setLoading(true);
     setError('');
     const vitalSigns: Record<string, number> = {};
@@ -28,6 +46,10 @@ export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: nu
     if (data.heartRate) vitalSigns.heartRate = parseInt(data.heartRate);
     if (data.weight) vitalSigns.weight = parseFloat(data.weight);
     if (data.respiratoryRate) vitalSigns.respiratoryRate = parseInt(data.respiratoryRate);
+
+    const suppliesUsed = supplies
+      .filter((s) => s.productId && s.quantity)
+      .map((s) => ({ productId: Number(s.productId), quantity: Number(s.quantity) }));
 
     const res = await fetch('/api/medical', {
       method: 'POST',
@@ -40,6 +62,7 @@ export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: nu
         treatment: data.treatment,
         observations: data.observations,
         vitalSigns: Object.keys(vitalSigns).length > 0 ? vitalSigns : null,
+        suppliesUsed: suppliesUsed.length > 0 ? suppliesUsed : null,
       }),
     });
     const json = await res.json();
@@ -89,6 +112,50 @@ export function MedicalRecordForm({ patientId, appointmentId }: { patientId?: nu
             <input type="number" {...register('respiratoryRate')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
         </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-medium">Insumos utilizados en esta consulta</p>
+          <button type="button" onClick={addSupply} className="flex items-center gap-1 text-xs text-primary hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Agregar insumo
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground mb-2">
+          Para insumos/medicamentos de la clínica (ej. 1 ml de un frasco de 100 ml). Descuenta el stock automáticamente al guardar.
+        </p>
+        {supplies.length > 0 && (
+          <div className="space-y-2">
+            {supplies.map((s, i) => {
+              const product = products.find((p) => String(p.id) === s.productId);
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <select
+                    value={s.productId}
+                    onChange={(e) => updateSupply(i, 'productId', e.target.value)}
+                    className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    <option value="">Seleccionar insumo...</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name} (stock: {formatQty(p.stock)} {p.unit})</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number" step="any" min="0.001"
+                    value={s.quantity}
+                    onChange={(e) => updateSupply(i, 'quantity', e.target.value)}
+                    placeholder="Cant."
+                    className="w-24 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <span className="text-xs text-muted-foreground w-12 shrink-0">{product?.unit || ''}</span>
+                  <button type="button" onClick={() => removeSupply(i)} className="text-red-400 hover:text-red-600 shrink-0">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div>

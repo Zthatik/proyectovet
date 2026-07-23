@@ -3,6 +3,7 @@ import { Search, Plus, Package, Eye, AlertTriangle, AlertCircle } from 'lucide-r
 import { Skeleton } from '../ui/skeleton';
 import { EmptyState } from '../ui/empty-state';
 import { Button } from '../ui/button';
+import { formatQty } from '../../lib/utils';
 
 interface Product {
   id: number;
@@ -10,8 +11,8 @@ interface Product {
   category: string;
   sku?: string;
   unitPrice: string;
-  stock: number;
-  minStock: number;
+  stock: string;
+  minStock: string;
   unit: string;
   isActive: boolean;
 }
@@ -120,9 +121,9 @@ export function ProductList() {
                   <td className="px-4 py-3 text-muted-foreground font-mono text-xs hidden lg:table-cell">{p.sku || '—'}</td>
                   <td className="px-4 py-3 text-right">${parseFloat(p.unitPrice).toLocaleString('es-CL')}</td>
                   <td className="px-4 py-3 text-right">
-                    <span className={`inline-flex items-center gap-1 font-medium ${p.stock <= p.minStock ? 'text-red-600' : 'text-green-700'}`}>
-                      {p.stock <= p.minStock && <AlertTriangle className="h-3.5 w-3.5" />}
-                      {p.stock} {p.unit}
+                    <span className={`inline-flex items-center gap-1 font-medium ${parseFloat(p.stock) <= parseFloat(p.minStock) ? 'text-red-600' : 'text-green-700'}`}>
+                      {parseFloat(p.stock) <= parseFloat(p.minStock) && <AlertTriangle className="h-3.5 w-3.5" />}
+                      {formatQty(p.stock)} {p.unit}
                     </span>
                   </td>
                   <td className="px-4 py-3">

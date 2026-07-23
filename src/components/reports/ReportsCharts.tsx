@@ -4,6 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { TrendingUp, Calendar, Users, AlertTriangle, Package, Receipt, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Clock } from 'lucide-react';
+import { formatQty } from '../../lib/utils';
 
 type Activity =
   | { kind: 'invoice'; label: string; detail: string; amount: number; at: string }
@@ -15,7 +16,7 @@ interface ReportData {
   appointmentsByType: { type: string; count: number }[];
   appointmentsByStatus: { status: string; count: number }[];
   topPatients: { name: string; species: string; count: number }[];
-  lowStock: { name: string; stock: number; minStock: number }[];
+  lowStock: { name: string; stock: string; minStock: string }[];
   recentMovements: { id: number; productName: string | null; type: string; quantity: number; reason: string | null; at: string }[];
   recentActivity: Activity[];
   summary: {
@@ -220,10 +221,10 @@ export function ReportsCharts() {
                     <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full bg-red-500 rounded-full"
-                        style={{ width: `${Math.min(100, (p.stock / p.minStock) * 100)}%` }}
+                        style={{ width: `${Math.min(100, (Number(p.stock) / Number(p.minStock)) * 100)}%` }}
                       />
                     </div>
-                    <span className="text-xs font-medium text-red-600">{p.stock} / {p.minStock}</span>
+                    <span className="text-xs font-medium text-red-600">{formatQty(p.stock)} / {formatQty(p.minStock)}</span>
                   </div>
                 </div>
               ))}

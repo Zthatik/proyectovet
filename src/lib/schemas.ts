@@ -91,8 +91,8 @@ export const productSchema = z.object({
   sku:            z.string().max(50).optional().nullable(),
   unitPrice:      z.coerce.number().nonnegative('Precio debe ser positivo'),
   costPrice:      z.coerce.number().nonnegative().optional().nullable(),
-  stock:          z.coerce.number().int().nonnegative().default(0),
-  minStock:       z.coerce.number().int().nonnegative().default(5),
+  stock:          z.coerce.number().nonnegative().default(0),
+  minStock:       z.coerce.number().nonnegative().default(5),
   unit:           z.string().max(20).default('unidad'),
   expirationDate: z.string().optional().nullable(),
   supplier:       z.string().max(200).optional().nullable(),
@@ -102,8 +102,8 @@ export type ProductInput = z.infer<typeof productSchema>;
 
 export const stockMovementSchema = z.object({
   productId:     z.number().int().positive(),
-  type:          z.enum(['entrada', 'salida', 'ajuste']),
-  quantity:      z.coerce.number().int().positive('Cantidad debe ser mayor a 0'),
+  type:          z.enum(['entrada', 'salida', 'ajuste', 'consumo_interno']),
+  quantity:      z.coerce.number().positive('Cantidad debe ser mayor a 0'),
   reason:        z.string().max(300).optional().nullable(),
 });
 
@@ -271,6 +271,12 @@ export const medicalRecordCreateSchema = z.object({
     weight: z.number().optional(),
     respiratoryRate: z.number().optional(),
   }).optional().nullable(),
+  // Insumos/medicamentos de la clínica consumidos durante esta consulta
+  // (ej. 1 ml de un frasco de 100 ml). Descuenta stock automáticamente.
+  suppliesUsed: z.array(z.object({
+    productId: z.number().int().positive(),
+    quantity: z.coerce.number().positive('Cantidad debe ser mayor a 0'),
+  })).optional().nullable(),
 });
 
 // ── Vaccine Create (POST) ────────────────────────────────────────────────────

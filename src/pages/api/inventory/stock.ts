@@ -22,17 +22,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const [product] = await db.select().from(products).where(eq(products.id, productId));
   if (!product) return new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404 });
 
-  const delta = type === 'salida' ? -quantity : quantity;
-  const newStock = product.stock + delta;
+  // stock/quantity son columnas decimal → llegan como string desde la BD;
+  // sumarlas directo concatenaría texto en vez de sumar.
+  const isOutflow = type === 'salida' || type === 'consumo_interno';
+  const delta = isOutflow ? -quantity : quantity;
+  const newStock = parseFloat(product.stock) + delta;
 
   if (newStock < 0) {
     return new Response(JSON.stringify({ error: 'Stock insuficiente' }), { status: 400 });
   }
 
   const updated = await db.transaction(async (tx) => {
-    await tx.update(products).set({ stock: newStock }).where(eq(products.id, productId));
+    await tx.update(products).set({ stock: String(newStock) }).where(eq(products.id, productId));
     await tx.insert(stockMovements).values({
-      productId, type, quantity, reason: reason || null, userId: user.id,
+      productId, type, quantity: String(quantity), reason: reason || null, userId: user.id,
     });
     const [result] = await tx.select().from(products).where(eq(products.id, productId));
     return result;
