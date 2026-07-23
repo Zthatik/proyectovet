@@ -4,6 +4,7 @@ import { invoices, invoiceItems, payments } from '../../../db/schema/billing';
 import { owners } from '../../../db/schema/patients';
 import { eq, desc } from 'drizzle-orm';
 import { invoiceUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
+import { logAudit } from '../../../lib/audit';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -59,7 +60,16 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!result.success) return zodError(result.error);
   const { status, notes } = result.data;
 
+  const [before] = await db.select({ status: invoices.status, invoiceNumber: invoices.invoiceNumber }).from(invoices).where(eq(invoices.id, id));
   await db.update(invoices).set({ status, notes }).where(eq(invoices.id, id));
+
+  if (status === 'anulada' && before?.status !== 'anulada') {
+    await logAudit({
+      userId: user.id, userName: user.name, action: 'invoice.void',
+      entityType: 'invoice', entityId: id, metadata: { invoiceNumber: before?.invoiceNumber, previousStatus: before?.status },
+    });
+  }
+
   const [updated] = await db.select().from(invoices).where(eq(invoices.id, id));
   return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });
 };

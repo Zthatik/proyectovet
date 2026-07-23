@@ -3,6 +3,7 @@ import { db } from '../../../db';
 import { owners, patients } from '../../../db/schema/patients';
 import { eq } from 'drizzle-orm';
 import { ownerUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
+import { logAudit } from '../../../lib/audit';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -62,6 +63,11 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     );
   }
 
+  const [before] = await db.select({ firstName: owners.firstName, lastName: owners.lastName, email: owners.email }).from(owners).where(eq(owners.id, id));
   await db.delete(owners).where(eq(owners.id, id));
+  await logAudit({
+    userId: user.id, userName: user.name, action: 'owner.delete',
+    entityType: 'owner', entityId: id, metadata: before ?? undefined,
+  });
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

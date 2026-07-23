@@ -15,6 +15,8 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) });
 
+  const inviteToken = new URLSearchParams(window.location.search).get('invite');
+
   const onSubmit = async (data: RegisterFormData) => {
     setError('');
     try {
@@ -22,12 +24,30 @@ export function RegisterForm() {
         email: data.email,
         password: data.password,
         name: data.name,
+        // @ts-expect-error -- additionalFields no está tipado en el cliente de Better Auth.
+        phone: data.phone,
       });
       if (result.error) {
         setError(result.error.message || 'Error al registrar la cuenta');
-      } else {
-        window.location.href = '/dashboard';
+        return;
       }
+
+      // Si vino de un link de invitación, vincula la cuenta nueva a la ficha
+      // de tutor que el staff ya preparó (con sus mascotas y su historial).
+      if (inviteToken) {
+        try {
+          await fetch('/api/invites/redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: inviteToken }),
+          });
+        } catch {
+          // Si falla la vinculación, la cuenta igual queda creada; el tutor
+          // puede pedir un nuevo link a la clínica.
+        }
+      }
+
+      window.location.href = '/dashboard';
     } catch {
       setError('Error al registrar. Intente de nuevo.');
     }
@@ -35,6 +55,11 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {inviteToken && (
+        <div className="text-sm bg-primary/10 text-primary rounded-lg p-3">
+          Estás aceptando una invitación de la clínica — al crear tu cuenta quedará vinculada automáticamente a tus mascotas.
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="name">Nombre completo</Label>
         <Input id="name" type="text" placeholder="Juan Perez" aria-invalid={!!errors.name} {...register('name')} />

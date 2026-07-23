@@ -1,33 +1,29 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { users, sessions, accounts, verifications } from '../db/schema/users';
 import { owners } from '../db/schema/patients';
 
 /**
- * Al registrarse un usuario (rol tutor por defecto) se le asegura una ficha de
- * tutor (owner). Si ya existe una ficha con su mismo correo y sin cuenta
- * vinculada (creada antes por la clínica), se vincula y así hereda sus
- * mascotas; de lo contrario se crea una ficha nueva.
+ * Al registrarse un usuario (rol tutor por defecto) se le crea siempre una
+ * ficha de tutor (owner) nueva y vacía.
+ *
+ * SEGURIDAD: antes esta función vinculaba automáticamente al usuario nuevo
+ * con cualquier ficha de owner preexistente que tuviera el mismo email como
+ * texto — sin verificar que la persona controlara realmente ese correo. Eso
+ * permitía que cualquiera que conociera el email de un tutor real (ej. visto
+ * en una factura) se registrara primero con ese email y heredara acceso a
+ * sus mascotas, historial médico y facturas. Ahora la única forma de
+ * vincular una cuenta nueva a una ficha existente es a través de una
+ * invitación de un solo uso que el staff genera explícitamente
+ * (POST /api/owners/[id]/invite) y que el tutor redime tras registrarse
+ * (POST /api/invites/redeem). Ver src/pages/api/invites/redeem.ts.
  */
 async function ensureOwnerForUser(user: { id: string; name?: string | null; email: string; phone?: string | null }) {
   const fullName = (user.name ?? '').trim();
   const spaceIdx = fullName.indexOf(' ');
   const firstName = spaceIdx === -1 ? fullName : fullName.slice(0, spaceIdx);
   const lastName = spaceIdx === -1 ? '' : fullName.slice(spaceIdx + 1);
-
-  // ¿Existe una ficha con ese correo y aún sin cuenta vinculada?
-  const [existing] = await db
-    .select({ id: owners.id })
-    .from(owners)
-    .where(and(sql`lower(${owners.email}) = lower(${user.email})`, isNull(owners.userId)))
-    .limit(1);
-
-  if (existing) {
-    await db.update(owners).set({ userId: user.id }).where(eq(owners.id, existing.id));
-    return;
-  }
 
   await db.insert(owners).values({
     userId: user.id,
@@ -39,13 +35,13 @@ async function ensureOwnerForUser(user: { id: string; name?: string | null; emai
 }
 
 const appUrl = process.env.BETTER_AUTH_URL || 'http://localhost:4321';
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Orígenes de confianza: la URL pública configurada + localhost para desarrollo.
-// Se pueden añadir más vía BETTER_AUTH_TRUSTED_ORIGINS (separados por coma).
+// Orígenes de confianza: la URL pública configurada + localhost solo fuera de
+// producción. Se pueden añadir más vía BETTER_AUTH_TRUSTED_ORIGINS (separados por coma).
 const trustedOrigins = [
   appUrl,
-  'http://localhost:4321',
-  'http://localhost:4322',
+  ...(isProduction ? [] : ['http://localhost:4321', 'http://localhost:4322']),
   ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []),
 ];
 
@@ -90,6 +86,8 @@ export const auth = betterAuth({
     },
   },
   session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 días: sesión completa antes de exigir volver a iniciar sesión.
+    updateAge: 60 * 60 * 24, // se renueva si hay actividad al menos una vez al día.
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // 5 minutes
