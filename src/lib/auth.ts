@@ -3,6 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
 import { users, sessions, accounts, verifications } from '../db/schema/users';
 import { owners } from '../db/schema/patients';
+import { sendPasswordResetEmail } from './email/mailer';
 
 /**
  * Al registrarse un usuario (rol tutor por defecto) se le crea siempre una
@@ -59,6 +60,18 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    // "Olvidé mi contraseña": envía el link de restablecimiento por email.
+    // Si SMTP no está configurado, sendPasswordResetEmail falla en
+    // silencio (mismo comportamiento que los recordatorios de citas) —
+    // Better Auth igual responde éxito al cliente para no filtrar si un
+    // email existe o no en el sistema.
+    sendResetPassword: async ({ user, url }) => {
+      const result = await sendPasswordResetEmail({ name: user.name, email: user.email, resetUrl: url });
+      if (!result.success) {
+        console.error('[auth] No se pudo enviar el email de restablecimiento:', result.message);
+      }
+    },
+    revokeSessionsOnPasswordReset: true,
   },
   user: {
     additionalFields: {

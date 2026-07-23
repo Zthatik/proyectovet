@@ -112,3 +112,60 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
     return { success: false, message: err.message };
   }
 }
+
+export interface PasswordResetEmailData {
+  name: string;
+  email: string;
+  resetUrl: string;
+}
+
+export async function sendPasswordResetEmail(data: PasswordResetEmailData): Promise<{ success: boolean; message: string }> {
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    return { success: false, message: 'SMTP no configurado. Agrega SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASS al archivo .env' };
+  }
+
+  const siteUrl = (import.meta.env.BETTER_AUTH_URL || '').replace(/\/$/, '');
+  const logoImg = siteUrl
+    ? `<img src="${siteUrl}${clinic.logo.main}" alt="${clinic.name}" width="120" style="display:block; margin:0 auto 4px; border-radius:8px;" />`
+    : `<h1 style="color: white; margin: 0; font-size: 22px;">${clinic.name}</h1>`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: Arial, sans-serif; background: #f9fafb; margin: 0; padding: 20px;">
+  <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div style="background: #44563D; padding: 24px; text-align: center;">
+      ${logoImg}
+      <p style="color: #d7dccb; margin: 6px 0 0; font-size: 13px;">Recuperar contraseña</p>
+    </div>
+    <div style="padding: 28px 24px;">
+      <p style="color: #374151; font-size: 15px; margin: 0 0 16px;">Hola <strong>${data.name}</strong>,</p>
+      <p style="color: #6b7280; font-size: 14px; margin: 0 0 20px;">Recibimos una solicitud para restablecer la contraseña de tu cuenta en el portal de ${clinic.name}. Si fuiste tú, haz clic en el botón para elegir una contraseña nueva:</p>
+      <div style="text-align: center; margin: 0 0 20px;">
+        <a href="${data.resetUrl}" style="display: inline-block; background: #44563D; color: white; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 8px;">Restablecer contraseña</a>
+      </div>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0 0 4px;">Este link expira en 1 hora. Si no solicitaste este cambio, puedes ignorar este correo — tu contraseña actual seguirá funcionando.</p>
+    </div>
+    <div style="background: #f9fafb; padding: 16px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">${clinic.name} — ${clinic.subtitle}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  try {
+    const from = import.meta.env.SMTP_FROM || DEFAULT_FROM;
+    await transporter.sendMail({
+      from,
+      to: data.email,
+      subject: `Recuperar tu contraseña — ${clinic.name}`,
+      html,
+    });
+    return { success: true, message: 'Email enviado correctamente' };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+}
