@@ -41,7 +41,7 @@ describe('hasPermission', () => {
       expect(hasPermission('recepcionista', 'appointments', 'write')).toBe(true);
     });
 
-    it('puede gestionar dueños', () => {
+    it('puede gestionar tutores', () => {
       expect(hasPermission('recepcionista', 'owners', 'read')).toBe(true);
       expect(hasPermission('recepcionista', 'owners', 'write')).toBe(true);
     });
@@ -59,47 +59,47 @@ describe('hasPermission', () => {
     });
   });
 
-  describe('cliente', () => {
+  describe('tutor', () => {
     it('puede leer sus propios pacientes (:own)', () => {
       // hasPermission matches :own as a variant
-      expect(hasPermission('cliente', 'patients', 'read')).toBe(true);
+      expect(hasPermission('tutor', 'patients', 'read')).toBe(true);
     });
 
     it('puede crear citas', () => {
-      expect(hasPermission('cliente', 'appointments', 'create')).toBe(true);
+      expect(hasPermission('tutor', 'appointments', 'create')).toBe(true);
     });
 
     it('NO puede acceder a datos generales de pacientes (write)', () => {
-      expect(hasPermission('cliente', 'patients', 'write')).toBe(false);
+      expect(hasPermission('tutor', 'patients', 'write')).toBe(false);
     });
 
     it('NO puede acceder a registros médicos de otros', () => {
-      expect(hasPermission('cliente', 'medical-records', 'read')).toBe(false);
+      expect(hasPermission('tutor', 'medical-records', 'read')).toBe(false);
     });
 
     it('NO puede gestionar inventario', () => {
-      expect(hasPermission('cliente', 'inventory', 'read')).toBe(false);
-      expect(hasPermission('cliente', 'inventory', 'write')).toBe(false);
+      expect(hasPermission('tutor', 'inventory', 'read')).toBe(false);
+      expect(hasPermission('tutor', 'inventory', 'write')).toBe(false);
     });
 
     it('NO puede gestionar usuarios', () => {
-      expect(hasPermission('cliente', 'users', 'read')).toBe(false);
+      expect(hasPermission('tutor', 'users', 'read')).toBe(false);
     });
   });
 });
 
 // ── requiresOwnershipCheck ────────────────────────────────────────────────────
 describe('requiresOwnershipCheck', () => {
-  it('cliente → true para patients:read (tiene :own)', () => {
-    expect(requiresOwnershipCheck('cliente', 'patients', 'read')).toBe(true);
+  it('tutor → true para patients:read (tiene :own)', () => {
+    expect(requiresOwnershipCheck('tutor', 'patients', 'read')).toBe(true);
   });
 
-  it('cliente → true para appointments:read (tiene :own)', () => {
-    expect(requiresOwnershipCheck('cliente', 'appointments', 'read')).toBe(true);
+  it('tutor → true para appointments:read (tiene :own)', () => {
+    expect(requiresOwnershipCheck('tutor', 'appointments', 'read')).toBe(true);
   });
 
-  it('cliente → true para prescriptions:read (tiene :own)', () => {
-    expect(requiresOwnershipCheck('cliente', 'prescriptions', 'read')).toBe(true);
+  it('tutor → true para prescriptions:read (tiene :own)', () => {
+    expect(requiresOwnershipCheck('tutor', 'prescriptions', 'read')).toBe(true);
   });
 
   it('admin → false (acceso total, sin ownership check)', () => {

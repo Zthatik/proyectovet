@@ -37,8 +37,8 @@ export const clinic = {
   logo: {
     /** Versión limpia (solo el nombre). Ideal para encabezados y la app. */
     main: '/logoAlmaVet.jpg',
-    /** Versión con eslogan completo. Ideal para piezas grandes (login). */
-    full: '/logo-alma-tagline.jpg',
+    /** Versión con eslogan completo y fondo transparente. Ideal para login. */
+    full: '/logo-alma-tagline.png',
     /** Mark cuadrado (perro + gato) sobre fondo blanco. Para chips e íconos. */
     mark: '/logo-alma-mark.png',
   },

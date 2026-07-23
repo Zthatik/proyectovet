@@ -1,6 +1,6 @@
 /// <reference path="../.astro/types.d.ts" />
 
-type UserRole = 'admin' | 'veterinario' | 'recepcionista' | 'cliente';
+type UserRole = 'admin' | 'veterinario' | 'recepcionista' | 'tutor';
 
 declare namespace App {
   interface Locals {

@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { scryptAsync } from '@noble/hashes/scrypt.js';
 import { userUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 import { jsonError, jsonOk } from '../../../lib/http';
+import { logAudit } from '../../../lib/audit';
 
 /** ¿El error es una violación de clave foránea de Postgres? */
 function isForeignKeyError(err: unknown): boolean {
@@ -37,6 +38,8 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return jsonError(400, 'No puedes desactivar tu propia cuenta');
   }
 
+  const [before] = await db.select({ role: users.role, isActive: users.isActive, name: users.name }).from(users).where(eq(users.id, id));
+
   const updateData: Record<string, unknown> = {};
   if (name) updateData.name = name;
   if (email) updateData.email = email;
@@ -52,6 +55,25 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (password) {
     const hashed = await hashPassword(password);
     await db.update(accounts).set({ password: hashed }).where(eq(accounts.userId, id));
+  }
+
+  if (role && before && role !== before.role) {
+    await logAudit({
+      userId: user.id, userName: user.name, action: 'user.role_change',
+      entityType: 'user', entityId: id, metadata: { target: before.name, from: before.role, to: role },
+    });
+  }
+  if (isActive !== undefined && before && isActive !== before.isActive) {
+    await logAudit({
+      userId: user.id, userName: user.name, action: isActive ? 'user.activate' : 'user.deactivate',
+      entityType: 'user', entityId: id, metadata: { target: before.name },
+    });
+  }
+  if (password) {
+    await logAudit({
+      userId: user.id, userName: user.name, action: 'user.password_reset',
+      entityType: 'user', entityId: id, metadata: { target: before?.name },
+    });
   }
 
   const [updated] = await db.select({ id: users.id, name: users.name, email: users.email, role: users.role, isActive: users.isActive }).from(users).where(eq(users.id, id));
@@ -70,7 +92,12 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   // (citas, facturas, historiales…) son RESTRICT, así que si el usuario
   // tiene registros asociados, Postgres lanza 23503 y sugerimos desactivar.
   try {
+    const [before] = await db.select({ name: users.name, role: users.role }).from(users).where(eq(users.id, id));
     await db.delete(users).where(eq(users.id, id));
+    await logAudit({
+      userId: user.id, userName: user.name, action: 'user.delete',
+      entityType: 'user', entityId: id, metadata: before ?? undefined,
+    });
     return jsonOk({ success: true });
   } catch (err) {
     if (isForeignKeyError(err)) {

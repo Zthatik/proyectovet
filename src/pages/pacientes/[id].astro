@@ -1,6 +1,7 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
-import { VaccineSection } from '../../components/patients/VaccineSection';
+import { PatientProfileTabs } from '../../components/patients/PatientProfileTabs';
+import { CoOwnersSection } from '../../components/patients/CoOwnersSection';
 import { db } from '../../db';
 import { patients, owners } from '../../db/schema/patients';
 import { medicalRecords } from '../../db/schema/medical';
@@ -30,15 +31,12 @@ const [patient] = await db
 
 if (!patient) return Astro.redirect('/pacientes');
 
-const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, id)).orderBy(desc(medicalRecords.date)).limit(5);
-const appts = await db.select().from(appointments).where(eq(appointments.patientId, id)).orderBy(desc(appointments.scheduledAt)).limit(5);
+const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, id)).orderBy(desc(medicalRecords.date)).limit(30);
+const appts = await db.select().from(appointments).where(eq(appointments.patientId, id)).orderBy(desc(appointments.scheduledAt)).limit(30);
 
 const canEdit = user.role === 'admin' || user.role === 'veterinario';
+const canManageOwners = user.role === 'admin' || user.role === 'recepcionista';
 const speciesEmoji: Record<string, string> = { perro: '🐕', gato: '🐈', ave: '🐦', reptil: '🦎', roedor: '🐭', otro: '🐾' };
-const typeLabels: Record<string, string> = {
-  consulta: 'Consulta', vacunacion: 'Vacunación', cirugia: 'Cirugía',
-  control: 'Control', emergencia: 'Emergencia', grooming: 'Grooming',
-};
 ---
 
 <DashboardLayout title={patient.name} pageTitle={`Paciente: ${patient.name}`}>
@@ -50,12 +48,14 @@ const typeLabels: Record<string, string> = {
     <!-- Info principal -->
     <div class="lg:col-span-1 space-y-4">
       <div class="rounded-xl border bg-card p-6">
-        <div class="flex items-center justify-between mb-4">
-          {patient.photo ? (
-            <img src={patient.photo} alt={patient.name} class="w-16 h-16 rounded-full object-cover border-2 border-border" />
-          ) : (
-            <div class="text-4xl">{speciesEmoji[patient.species] || '🐾'}</div>
-          )}
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-20 h-20 rounded-2xl overflow-hidden border bg-muted flex items-center justify-center shrink-0">
+            {patient.photo ? (
+              <img src={patient.photo} alt={patient.name} class="w-full h-full object-cover" />
+            ) : (
+              <span class="text-4xl">{speciesEmoji[patient.species] || '🐾'}</span>
+            )}
+          </div>
           <span class={`px-2 py-1 rounded-full text-xs font-medium ${patient.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
             {patient.isActive ? 'Activo' : 'Inactivo'}
           </span>
@@ -80,10 +80,12 @@ const typeLabels: Record<string, string> = {
       <!-- Tutor -->
       <div class="rounded-xl border bg-card p-6">
         <h3 class="font-semibold mb-3">Tutor</h3>
-        <p class="font-medium">{patient.ownerFirstName} {patient.ownerLastName}</p>
+        <a href={`/tutores/${patient.ownerId}`} class="font-medium text-primary hover:underline">{patient.ownerFirstName} {patient.ownerLastName}</a>
         {patient.ownerPhone && <p class="text-sm text-muted-foreground">{patient.ownerPhone}</p>}
         {patient.ownerEmail && <p class="text-sm text-muted-foreground">{patient.ownerEmail}</p>}
       </div>
+
+      <CoOwnersSection client:load patientId={id} canEdit={canManageOwners} />
 
       {patient.notes && (
         <div class="rounded-xl border bg-card p-6">
@@ -94,51 +96,8 @@ const typeLabels: Record<string, string> = {
     </div>
 
     <!-- Historial -->
-    <div class="lg:col-span-2 space-y-4">
-      <div class="rounded-xl border bg-card p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold">Historial Médico</h3>
-          <a href={`/historial/nuevo?patientId=${id}`} class="text-xs text-primary hover:underline">+ Nuevo registro</a>
-        </div>
-        {records.length === 0 ? (
-          <p class="text-sm text-muted-foreground">Sin registros médicos.</p>
-        ) : (
-          <div class="space-y-2">
-            {records.map((r) => (
-              <a href={`/historial/${r.id}`} class="block border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-medium text-sm">{r.reason}</span>
-                  <span class="text-xs text-muted-foreground">{format(new Date(r.date), 'dd/MM/yyyy', { locale: es })}</span>
-                </div>
-                {r.diagnosis && <p class="text-sm text-muted-foreground line-clamp-1">{r.diagnosis}</p>}
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div class="rounded-xl border bg-card p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold">Próximas Citas</h3>
-          <a href={`/citas/nueva?patientId=${id}`} class="text-xs text-primary hover:underline">+ Nueva cita</a>
-        </div>
-        {appts.length === 0 ? (
-          <p class="text-sm text-muted-foreground">Sin citas registradas.</p>
-        ) : (
-          <div class="space-y-2">
-            {appts.map((a) => (
-              <a href={`/citas/${a.id}`} class="flex items-center justify-between border rounded-lg p-3 hover:bg-muted/30 transition-colors">
-                <div>
-                  <span class="text-sm font-medium">{typeLabels[a.type] || a.type}</span>
-                  {a.reason && <span class="text-xs text-muted-foreground ml-2">· {a.reason}</span>}
-                </div>
-                <span class="text-xs text-muted-foreground">{format(new Date(a.scheduledAt), 'dd/MM/yyyy HH:mm', { locale: es })}</span>
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-      <VaccineSection client:load patientId={id} canEdit={canEdit} />
+    <div class="lg:col-span-2">
+      <PatientProfileTabs client:load patientId={id} canEdit={canEdit} records={records} appointments={appts} />
     </div>
   </div>
 </DashboardLayout>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Syringe, Phone, AlertTriangle, Clock, Calendar } from 'lucide-react';
+import { Syringe, Phone, AlertTriangle, Clock, Calendar, ShieldCheck } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 
 interface VaccineReminder {
   id: number;
@@ -52,7 +54,7 @@ export function VaccineReminders() {
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />
+            <Skeleton key={i} className="h-14 rounded-lg" />
           ))}
         </div>
       </div>
@@ -91,7 +93,7 @@ export function VaccineReminders() {
       </div>
 
       {reminders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay vacunas pendientes en los próximos 30 días.</p>
+        <EmptyState icon={ShieldCheck} title="No hay vacunas pendientes en los próximos 30 días" className="py-6" />
       ) : (
         <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
           {overdue.length > 0 && (

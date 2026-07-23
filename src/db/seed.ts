@@ -61,8 +61,8 @@ async function seed() {
     { id: vetId,     name: 'Dr. Carlos Ramirez',  email: 'veterinario@vetclinic.com', emailVerified: true, role: 'veterinario',   phone: '+506 8888-1111' },
     { id: vet2Id,    name: 'Dra. Sofia Mora',     email: 'vet2@vetclinic.com',        emailVerified: true, role: 'veterinario',   phone: '+506 8888-4444' },
     { id: recepId,   name: 'Maria Lopez',         email: 'recepcion@vetclinic.com',   emailVerified: true, role: 'recepcionista', phone: '+506 8888-2222' },
-    { id: client1Id, name: 'Juan Perez',          email: 'cliente@vetclinic.com',     emailVerified: true, role: 'cliente',       phone: '+506 8888-3333' },
-    { id: client2Id, name: 'Ana Martinez',        email: 'cliente2@vetclinic.com',    emailVerified: true, role: 'cliente',       phone: '+506 7777-4444' },
+    { id: client1Id, name: 'Juan Perez',          email: 'cliente@vetclinic.com',     emailVerified: true, role: 'tutor',         phone: '+506 8888-3333' },
+    { id: client2Id, name: 'Ana Martinez',        email: 'cliente2@vetclinic.com',    emailVerified: true, role: 'tutor',         phone: '+506 7777-4444' },
   ]);
   console.log('✅ Users created.');
 

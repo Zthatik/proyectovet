@@ -1,0 +1,21 @@
+---
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import { OwnerForm } from '../../../components/patients/OwnerForm';
+import { db } from '../../../db';
+import { owners } from '../../../db/schema/patients';
+import { eq } from 'drizzle-orm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/login');
+
+const id = Number(Astro.params.id);
+const [owner] = await db.select({ id: owners.id }).from(owners).where(eq(owners.id, id));
+if (!owner) return Astro.redirect('/tutores');
+---
+
+<DashboardLayout title="Editar Tutor" pageTitle="Editar Tutor">
+  <div class="mb-4">
+    <a href={`/tutores/${id}`} class="text-sm text-muted-foreground hover:text-foreground transition-colors">← Volver a la ficha</a>
+  </div>
+  <OwnerForm client:load ownerId={id} />
+</DashboardLayout>

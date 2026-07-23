@@ -7,6 +7,7 @@ import { users } from '../../db/schema/users';
 import { eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { buildWhatsappLink, buildAppointmentReminderMessage, appointmentTypeLabels } from '../../lib/whatsapp';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/login');
@@ -50,6 +51,19 @@ const isActive = !['completada', 'cancelada', 'no_asistio'].includes(appt.status
 const canBill  = user.role === 'admin' || user.role === 'recepcionista';
 const canAct   = user.role === 'admin' || user.role === 'recepcionista';
 const canMed   = user.role === 'admin' || user.role === 'veterinario';
+
+// Recordatorio clic-para-enviar: abre WhatsApp con el mensaje ya escrito.
+const whatsappReminderLink = buildWhatsappLink(
+  appt.ownerPhone,
+  buildAppointmentReminderMessage({
+    ownerName: `${appt.ownerFirstName ?? ''} ${appt.ownerLastName ?? ''}`.trim() || 'tutor/a',
+    patientName: appt.patientName || 'su mascota',
+    appointmentDate: format(new Date(appt.scheduledAt), "EEEE dd 'de' MMMM 'de' yyyy", { locale: es }),
+    appointmentTime: format(new Date(appt.scheduledAt), 'HH:mm'),
+    appointmentTypeLabel: appointmentTypeLabels[appt.type] || appt.type,
+    veterinarianName: appt.veterinarianName || 'nuestro equipo',
+  }),
+);
 ---
 
 <DashboardLayout title="Detalle de Cita" pageTitle="Detalle de Cita">
@@ -156,6 +170,13 @@ const canMed   = user.role === 'admin' || user.role === 'veterinario';
           class="px-4 py-2 rounded-lg border text-sm hover:bg-muted transition-colors">
           Editar
         </a>
+        {canAct && isActive && whatsappReminderLink && (
+          <a href={whatsappReminderLink} target="_blank" rel="noopener noreferrer"
+            class="px-4 py-2 rounded-lg text-sm font-medium text-white hover:opacity-90 transition-opacity"
+            style="background-color: #25D366">
+            💬 Recordar por WhatsApp
+          </a>
+        )}
         {canAct && isActive && (
           <button id="btn-remind"
             class="px-4 py-2 rounded-lg border text-sm hover:bg-muted transition-colors">

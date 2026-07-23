@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '../../../db';
-import { owners } from '../../../db/schema/patients';
-import { eq, like, or, desc } from 'drizzle-orm';
+import { owners, patients } from '../../../db/schema/patients';
+import { like, or, desc, sql, inArray } from 'drizzle-orm';
 import { ownerSchema, zodError } from '../../../lib/schemas';
 
 const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
@@ -32,7 +32,21 @@ export const GET: APIRoute = async ({ request, locals }) => {
   }
 
   const result = await query.orderBy(desc(owners.createdAt)).limit(limit).offset(offset);
-  return new Response(JSON.stringify(result), {
+
+  // Conteo de mascotas activas por tutor, en una sola consulta agregada.
+  const ids = result.map((o) => o.id);
+  const counts = ids.length
+    ? await db
+        .select({ ownerId: patients.ownerId, count: sql<number>`count(*)::int` })
+        .from(patients)
+        .where(inArray(patients.ownerId, ids))
+        .groupBy(patients.ownerId)
+    : [];
+  const countByOwner = new Map(counts.map((c) => [c.ownerId, c.count]));
+
+  const withCounts = result.map((o) => ({ ...o, petCount: countByOwner.get(o.id) ?? 0 }));
+
+  return new Response(JSON.stringify(withCounts), {
     headers: { 'Content-Type': 'application/json' },
   });
 };

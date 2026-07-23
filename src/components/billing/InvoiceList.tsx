@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Receipt, Eye, BarChart2 } from 'lucide-react';
+import { Plus, Receipt, Eye, BarChart2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
+import { Button } from '../ui/button';
 
 interface Invoice {
   id: number;
@@ -62,19 +65,28 @@ export function InvoiceList({ showReports = false }: { showReports?: boolean }) 
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="rounded-xl border overflow-hidden">
+          <div className="bg-muted/50 p-3"><Skeleton className="h-4 w-32" /></div>
+          <div className="divide-y">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24 hidden sm:block" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-red-500 mb-3">{error}</p>
-          <button onClick={fetchInvoices} className="text-sm text-primary hover:underline">Reintentar</button>
-        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title={error}
+          action={<Button variant="outline" size="sm" onClick={fetchInvoices}>Reintentar</Button>}
+        />
       ) : invoices.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No hay facturas registradas</p>
-        </div>
+        <EmptyState icon={Receipt} title="No hay facturas registradas" />
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">

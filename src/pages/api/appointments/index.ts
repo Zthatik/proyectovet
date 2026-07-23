@@ -45,6 +45,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       ownerId: appointments.ownerId,
       ownerFirstName: owners.firstName,
       ownerLastName: owners.lastName,
+      ownerPhone: owners.phone,
       veterinarianId: appointments.veterinarianId,
       veterinarianName: users.name,
     })

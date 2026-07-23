@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Syringe, Plus, Trash2, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Syringe, Plus, Trash2, ChevronDown, ChevronUp, AlertTriangle, Download } from 'lucide-react';
 
 interface Vaccine {
   id: number;
@@ -94,14 +94,24 @@ export function VaccineSection({ patientId, canEdit }: { patientId: number; canE
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{vaccines.length}</span>
           )}
         </div>
-        {canEdit && (
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="flex items-center gap-1 text-xs text-primary hover:underline"
+        <div className="flex items-center gap-3">
+          <a
+            href={`/api/patients/${patientId}/vaccine-card`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
           >
-            {showForm ? <><ChevronUp className="h-3.5 w-3.5" /> Cancelar</> : <><Plus className="h-3.5 w-3.5" /> Registrar vacuna</>}
-          </button>
-        )}
+            <Download className="h-3.5 w-3.5" /> Carnet PDF
+          </a>
+          {canEdit && (
+            <button
+              onClick={() => setShowForm((v) => !v)}
+              className="flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              {showForm ? <><ChevronUp className="h-3.5 w-3.5" /> Cancelar</> : <><Plus className="h-3.5 w-3.5" /> Registrar vacuna</>}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Form */}

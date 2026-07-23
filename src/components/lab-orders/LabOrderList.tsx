@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FlaskConical, Plus, CheckCircle, Clock, XCircle, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 
 interface LabOrder {
   id: number;
@@ -80,9 +82,21 @@ export function LabOrderList({ canWrite = false }: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        <FlaskConical className="h-5 w-5 animate-pulse mr-2" />
-        Cargando órdenes...
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <div className="rounded-lg border overflow-hidden">
+          <div className="bg-muted/50 p-3"><Skeleton className="h-4 w-32" /></div>
+          <div className="divide-y">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-24 hidden sm:block" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -121,10 +135,7 @@ export function LabOrderList({ canWrite = false }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <FlaskConical className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>No hay órdenes registradas</p>
-        </div>
+        <EmptyState icon={FlaskConical} title="No hay órdenes registradas" />
       ) : (
         <div className="rounded-lg border overflow-hidden">
           <table className="w-full text-sm">

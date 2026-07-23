@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -10,9 +10,20 @@ export function OwnerForm({ ownerId }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<OwnerFormData>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerFormSchema),
   });
+
+  useEffect(() => {
+    if (!ownerId) return;
+    fetch(`/api/owners/${ownerId}`)
+      .then((r) => r.json())
+      .then((o) => reset({
+        firstName: o.firstName, lastName: o.lastName,
+        email: o.email || '', phone: o.phone || '',
+        address: o.address || '', documentId: o.documentId || '',
+      }));
+  }, [ownerId]);
 
   async function onSubmit(data: OwnerFormData) {
     setLoading(true);
@@ -27,7 +38,8 @@ export function OwnerForm({ ownerId }: Props) {
     const json = await res.json();
     if (!res.ok) { toast.error(json.error || 'Error al guardar'); setError(json.error || 'Error al guardar'); setLoading(false); return; }
     toast.success(ownerId ? 'Tutor actualizado correctamente' : 'Tutor registrado correctamente');
-    setTimeout(() => { window.location.href = `/pacientes/nuevo?ownerId=${json.id}`; }, 500);
+    const nextUrl = ownerId ? `/tutores/${json.id}` : `/pacientes/nuevo?ownerId=${json.id}`;
+    setTimeout(() => { window.location.href = nextUrl; }, 500);
   }
 
   return (

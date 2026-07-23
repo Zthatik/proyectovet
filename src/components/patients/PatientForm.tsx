@@ -5,7 +5,7 @@ import { PawPrint } from 'lucide-react';
 import { patientFormSchema, type PatientFormData } from '../../lib/schemas';
 import { toast } from 'sonner';
 
-interface Owner { id: number; firstName: string; lastName: string; }
+interface Owner { id: number; firstName: string; lastName: string; email?: string | null; userId?: string | null; }
 
 interface Props {
   patientId?: number;
@@ -123,10 +123,15 @@ export function PatientForm({ patientId, defaultOwnerId }: Props) {
           <select {...register('ownerId')} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
             <option value="">Seleccionar tutor...</option>
             {owners.map((o) => (
-              <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>
+              <option key={o.id} value={o.id}>
+                {o.firstName} {o.lastName}
+                {o.email ? ` — ${o.email}` : ''}
+                {o.userId ? ' ✓ con cuenta' : ''}
+              </option>
             ))}
           </select>
           {errors.ownerId && <p className="text-red-500 text-xs mt-1">{errors.ownerId.message}</p>}
+          <p className="text-xs text-muted-foreground mt-1">Los tutores con “✓ con cuenta” pueden ver esta mascota en su portal.</p>
           <a href="/pacientes/nuevo-dueno" className="text-xs text-primary hover:underline mt-1 inline-block">+ Registrar nuevo tutor</a>
         </div>
 

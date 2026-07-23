@@ -5,6 +5,7 @@ import { medicalRecords, vaccines } from '../../../db/schema/medical';
 import { appointments } from '../../../db/schema/appointments';
 import { eq, desc } from 'drizzle-orm';
 import { patientUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
+import { logAudit } from '../../../lib/audit';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -79,6 +80,11 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   if (!id || isNaN(id) || id <= 0) {
     return new Response(JSON.stringify({ error: 'ID inválido' }), { status: 400 });
   }
+  const [before] = await db.select({ name: patients.name }).from(patients).where(eq(patients.id, id));
   await db.update(patients).set({ isActive: false }).where(eq(patients.id, id));
+  await logAudit({
+    userId: user.id, userName: user.name, action: 'patient.deactivate',
+    entityType: 'patient', entityId: id, metadata: { name: before?.name },
+  });
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 };

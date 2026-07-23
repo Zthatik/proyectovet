@@ -3,6 +3,7 @@ import { db } from '../../../db';
 import { products, stockMovements } from '../../../db/schema/inventory';
 import { eq, desc } from 'drizzle-orm';
 import { productUpdateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
+import { logAudit } from '../../../lib/audit';
 
 export const GET: APIRoute = async ({ params, locals }) => {
   const user = locals.user;
@@ -33,12 +34,21 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   if (!result.success) return zodError(result.error);
   const { name, category, sku, unitPrice, costPrice, minStock, unit, expirationDate, supplier } = result.data;
 
+  const [before] = await db.select({ name: products.name, unitPrice: products.unitPrice }).from(products).where(eq(products.id, id));
+
   await db.update(products).set({
     name, category, sku,
     unitPrice: unitPrice !== undefined ? String(unitPrice) : undefined,
     costPrice: costPrice !== undefined ? String(costPrice) : undefined,
     minStock, unit, expirationDate: expirationDate || null, supplier,
   }).where(eq(products.id, id));
+
+  if (unitPrice !== undefined && before && String(unitPrice) !== before.unitPrice) {
+    await logAudit({
+      userId: user.id, userName: user.name, action: 'product.price_change',
+      entityType: 'product', entityId: id, metadata: { name: before.name, from: before.unitPrice, to: String(unitPrice) },
+    });
+  }
 
   const [updated] = await db.select().from(products).where(eq(products.id, id));
   return new Response(JSON.stringify(updated), { headers: { 'Content-Type': 'application/json' } });

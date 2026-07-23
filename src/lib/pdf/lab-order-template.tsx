@@ -107,7 +107,7 @@ export function LabOrderPDF({ order }: LabOrderPDFProps) {
               <Text style={styles.value}>{order.patientSpecies ? order.patientSpecies.charAt(0).toUpperCase() + order.patientSpecies.slice(1) : '—'}</Text>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>PROPIETARIO</Text>
+              <Text style={styles.label}>TUTOR</Text>
               <Text style={styles.value}>{order.ownerFirstName} {order.ownerLastName}</Text>
             </View>
             {order.ownerPhone && (

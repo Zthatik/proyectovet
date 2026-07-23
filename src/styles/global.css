@@ -1,34 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  /* Frutal Vibrante — Lime #8FA832 · Vanilla #F0EDB8 · Cream #FFFEF0 · Raspberry #B81D52 · Lemon #F5A800 */
-  --color-primary: oklch(0.65 0.14 122);           /* Lime #8FA832 */
-  --color-primary-foreground: oklch(0.99 0 0);     /* blanco */
-  --color-secondary: oklch(0.94 0.06 98);          /* Vanilla #F0EDB8 */
-  --color-secondary-foreground: oklch(0.28 0.05 122);
-  --color-accent: oklch(0.77 0.16 75);             /* Lemon #F5A800 */
-  --color-accent-foreground: oklch(0.20 0.04 75);
-  --color-muted: oklch(0.94 0.06 98);              /* Vanilla #F0EDB8 */
-  --color-muted-foreground: oklch(0.50 0.07 112);  /* Lime apagado */
-  --color-destructive: oklch(0.58 0.18 10);        /* Pink Grapefruit #E8436A */
-  --color-destructive-foreground: oklch(0.99 0 0);
-  --color-border: oklch(0.88 0.05 98);             /* Vanilla más claro */
-  --color-input: oklch(0.88 0.05 98);
-  --color-ring: oklch(0.65 0.14 122);              /* Lime */
-  --color-background: oklch(0.99 0.015 98);        /* Cream #FFFEF0 */
-  --color-foreground: oklch(0.20 0.03 122);        /* casi negro verdoso */
-  --color-card: oklch(1.0 0 0);
-  --color-card-foreground: oklch(0.20 0.03 122);
-  --color-popover: oklch(1.0 0 0);
-  --color-popover-foreground: oklch(0.20 0.03 122);
-  --color-sidebar: oklch(0.65 0.14 122);           /* Lime sidebar */
-  --color-sidebar-foreground: oklch(0.99 0 0);     /* blanco sobre lime */
-  --color-sidebar-accent: oklch(0.57 0.13 122);    /* Lime más oscuro (activo) */
-  --color-sidebar-border: oklch(0.57 0.13 122);
-  --color-brand: oklch(0.44 0.18 350);             /* Raspberry #B81D52 (logo/avatar) */
-  --color-brand-foreground: oklch(0.99 0 0);
-  --color-success: oklch(0.6 0.18 145);
-  --color-warning: oklch(0.77 0.16 75);            /* Lemon #F5A800 */
+  /* Alma Veterinaria — Bosque y terracota. Fiel al logo: verde olivo, salvia,
+     acento terracota/dorado y fondo crema. */
+  --color-primary: #4C5C3F;            /* Verde bosque */
+  --color-primary-foreground: #FFFFFF; /* blanco sobre verde */
+  --color-secondary: #E7EAD9;          /* salvia pálida */
+  --color-secondary-foreground: #2C3327;
+  --color-accent: #A9794E;             /* terracota / dorado */
+  --color-accent-foreground: #FFFFFF;
+  --color-muted: #EEEFE6;              /* crema-salvia muy claro */
+  --color-muted-foreground: #6E7763;   /* verde-salvia apagado */
+  --color-destructive: #BC4536;        /* rojo ladrillo */
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #E4DFD1;             /* borde cálido sobre crema */
+  --color-input: #E4DFD1;
+  --color-ring: #4C5C3F;               /* foco verde */
+  --color-background: #F7F4EC;         /* crema */
+  --color-foreground: #2C3327;         /* tinta verde oscura */
+  --color-card: #FFFFFF;
+  --color-card-foreground: #2C3327;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #2C3327;
+  --color-sidebar: #3E4B34;            /* verde profundo */
+  --color-sidebar-foreground: #F2EFE4; /* crema sobre verde */
+  --color-sidebar-accent: #54663E;     /* verde más claro (activo) */
+  --color-sidebar-border: #34402A;
+  --color-brand: #A9794E;              /* terracota (avatares/acentos de marca) */
+  --color-brand-foreground: #FFFFFF;
+  --color-success: #4F7A3A;            /* verde */
+  --color-warning: #C8923D;            /* ámbar dorado */
 
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
@@ -39,33 +40,33 @@
 }
 
 .dark {
-  --color-background: oklch(0.15 0.01 98);
-  --color-foreground: oklch(0.93 0.01 98);
-  --color-card: oklch(0.20 0.01 98);
-  --color-card-foreground: oklch(0.93 0.01 98);
-  --color-popover: oklch(0.20 0.01 98);
-  --color-popover-foreground: oklch(0.93 0.01 98);
-  --color-primary: oklch(0.70 0.14 122);
-  --color-primary-foreground: oklch(0.15 0 0);
-  --color-secondary: oklch(0.25 0.03 98);
-  --color-secondary-foreground: oklch(0.90 0.03 98);
-  --color-muted: oklch(0.25 0.02 98);
-  --color-muted-foreground: oklch(0.65 0.04 98);
-  --color-accent: oklch(0.72 0.14 75);
-  --color-accent-foreground: oklch(0.15 0 0);
-  --color-destructive: oklch(0.55 0.18 10);
-  --color-destructive-foreground: oklch(0.99 0 0);
-  --color-border: oklch(0.30 0.02 98);
-  --color-input: oklch(0.30 0.02 98);
-  --color-ring: oklch(0.70 0.14 122);
-  --color-sidebar: oklch(0.18 0.02 122);
-  --color-sidebar-foreground: oklch(0.90 0.02 98);
-  --color-sidebar-accent: oklch(0.25 0.04 122);
-  --color-sidebar-border: oklch(0.28 0.02 98);
-  --color-brand: oklch(0.50 0.18 350);
-  --color-brand-foreground: oklch(0.99 0 0);
-  --color-success: oklch(0.55 0.18 145);
-  --color-warning: oklch(0.72 0.16 75);
+  --color-background: #1E211B;
+  --color-foreground: #ECEAE0;
+  --color-card: #262A22;
+  --color-card-foreground: #ECEAE0;
+  --color-popover: #262A22;
+  --color-popover-foreground: #ECEAE0;
+  --color-primary: #8CA36B;            /* verde salvia más claro (contraste en oscuro) */
+  --color-primary-foreground: #1A1E14;
+  --color-secondary: #2E342A;
+  --color-secondary-foreground: #E4E6DA;
+  --color-muted: #2A2E25;
+  --color-muted-foreground: #A2A892;
+  --color-accent: #C2925F;             /* terracota más clara */
+  --color-accent-foreground: #1E1A14;
+  --color-destructive: #C75748;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #353A2E;
+  --color-input: #353A2E;
+  --color-ring: #8CA36B;
+  --color-sidebar: #1B1F17;
+  --color-sidebar-foreground: #DDE0D0;
+  --color-sidebar-accent: #2C3324;
+  --color-sidebar-border: #2A2E22;
+  --color-brand: #C2925F;
+  --color-brand-foreground: #1E1A14;
+  --color-success: #6E9A4E;
+  --color-warning: #C8923D;
 }
 
 @layer base {
