@@ -3,7 +3,8 @@ import { db } from '../../../db';
 import { medicalRecords, vaccines } from '../../../db/schema/medical';
 import { users } from '../../../db/schema/users';
 import { patients } from '../../../db/schema/patients';
-import { eq, desc } from 'drizzle-orm';
+import { products, stockMovements } from '../../../db/schema/inventory';
+import { eq, desc, inArray } from 'drizzle-orm';
 import { medicalRecordCreateSchema, zodError, parseJsonBody } from '../../../lib/schemas';
 
 const STAFF_ROLES = ['admin', 'veterinario', 'recepcionista'];
@@ -50,16 +51,60 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if ('error' in parsed) return parsed.error;
   const result_ = medicalRecordCreateSchema.safeParse(parsed.data);
   if (!result_.success) return zodError(result_.error);
-  const { patientId, appointmentId, date, reason, diagnosis, treatment, observations, vitalSigns } = result_.data;
+  const { patientId, appointmentId, date, reason, diagnosis, treatment, observations, vitalSigns, suppliesUsed } = result_.data;
 
-  const [newRecord] = await db.insert(medicalRecords).values({
-    patientId,
-    veterinarianId: user.id,
-    appointmentId: appointmentId ?? null,
-    date: date ? new Date(date) : new Date(),
-    reason, diagnosis, treatment, observations,
-    vitalSigns: vitalSigns ?? null,
-  }).returning();
+  // Valida stock disponible ANTES de crear nada, para no dejar un registro
+  // médico a medio guardar si algún insumo no alcanza.
+  if (suppliesUsed && suppliesUsed.length > 0) {
+    const productIds = suppliesUsed.map((s) => s.productId);
+    const found = await db.select({ id: products.id, name: products.name, stock: products.stock, unit: products.unit })
+      .from(products).where(inArray(products.id, productIds));
+    const byId = new Map(found.map((p) => [p.id, p]));
+
+    for (const supply of suppliesUsed) {
+      const product = byId.get(supply.productId);
+      if (!product) {
+        return new Response(JSON.stringify({ error: `Insumo con ID ${supply.productId} no encontrado` }), { status: 404 });
+      }
+      if (parseFloat(product.stock) < supply.quantity) {
+        return new Response(
+          JSON.stringify({ error: `Stock insuficiente de "${product.name}": quedan ${product.stock} ${product.unit}, se intentó usar ${supply.quantity}` }),
+          { status: 400 },
+        );
+      }
+    }
+  }
+
+  const newRecord = await db.transaction(async (tx) => {
+    const [record] = await tx.insert(medicalRecords).values({
+      patientId,
+      veterinarianId: user.id,
+      appointmentId: appointmentId ?? null,
+      date: date ? new Date(date) : new Date(),
+      reason, diagnosis, treatment, observations,
+      vitalSigns: vitalSigns ?? null,
+    }).returning();
+
+    if (suppliesUsed && suppliesUsed.length > 0) {
+      for (const supply of suppliesUsed) {
+        const [product] = await tx.select({ stock: products.stock }).from(products).where(eq(products.id, supply.productId));
+        const newStock = parseFloat(product.stock) - supply.quantity;
+        await tx.update(products).set({ stock: String(newStock) }).where(eq(products.id, supply.productId));
+        await tx.insert(stockMovements).values({
+          productId: supply.productId,
+          type: 'consumo_interno',
+          quantity: String(supply.quantity),
+          reason: `Consulta: ${reason}`,
+          referenceType: 'medical_record',
+          referenceId: record.id,
+          userId: user.id,
+        });
+      }
+    }
+
+    return record;
+  });
+
   return new Response(JSON.stringify(newRecord), {
     status: 201,
     headers: { 'Content-Type': 'application/json' },

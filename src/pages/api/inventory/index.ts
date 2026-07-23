@@ -51,8 +51,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     name, description, category, sku, barcode,
     unitPrice: String(unitPrice),
     costPrice: costPrice ? String(costPrice) : null,
-    stock: Number(stock) || 0,
-    minStock: Number(minStock) || 5,
+    stock: String(Number(stock) || 0),
+    minStock: String(Number(minStock) || 5),
     unit: unit || 'unidad',
     expirationDate: expirationDate || null,
     supplier,
@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     await db.insert(stockMovements).values({
       productId: newProduct.id,
       type: 'entrada',
-      quantity: Number(stock),
+      quantity: String(Number(stock)),
       reason: 'Stock inicial',
       userId: user.id,
     });

@@ -31,8 +31,10 @@ export const products = pgTable('products', {
   barcode: varchar('barcode', { length: 50 }),
   unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
   costPrice: decimal('cost_price', { precision: 10, scale: 2 }),
-  stock: integer('stock').notNull().default(0),
-  minStock: integer('min_stock').notNull().default(5),
+  // Decimal (no entero): permite registrar consumo fraccionario, ej. 1 ml
+  // de un frasco de 100 ml usado en una consulta.
+  stock: decimal('stock', { precision: 12, scale: 3 }).notNull().default('0'),
+  minStock: decimal('min_stock', { precision: 12, scale: 3 }).notNull().default('5'),
   unit: varchar('unit', { length: 20 }).notNull().default('unidad'),
   expirationDate: date('expiration_date'),
   supplier: varchar('supplier', { length: 200 }),
@@ -48,6 +50,9 @@ export const stockMovementTypeEnum = pgEnum('movement_type', [
   'entrada',
   'salida',
   'ajuste',
+  // Consumo propio de la clínica (ej. medicamento usado durante una
+  // consulta), a diferencia de "salida" que hoy se usa para ventas/retiros.
+  'consumo_interno',
 ]);
 
 export const stockMovements = pgTable('stock_movements', {
@@ -56,7 +61,7 @@ export const stockMovements = pgTable('stock_movements', {
     .notNull()
     .references(() => products.id, { onDelete: 'cascade' }),
   type: stockMovementTypeEnum('movement_type').notNull(),
-  quantity: integer('quantity').notNull(),
+  quantity: decimal('quantity', { precision: 12, scale: 3 }).notNull(),
   reason: varchar('reason', { length: 255 }),
   referenceType: varchar('reference_type', { length: 50 }),
   referenceId: integer('reference_id'),

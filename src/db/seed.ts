@@ -92,14 +92,14 @@ async function seed() {
   console.log('✅ Patients created.');
 
   // ── PRODUCTS ──────────────────────────────────────────────────────────────
-  const [pr1] = await db.insert(products).values({ name: 'Amoxicilina 500mg',        description: 'Antibiótico de amplio espectro',           category: 'medicamento', sku: 'MED-001', unitPrice: '5500.00',  costPrice: '3200.00',  stock: 100, minStock: 20, unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
-  const [pr2] = await db.insert(products).values({ name: 'Vacuna Antirrábica',       description: 'Vacuna contra la rabia',                   category: 'vacuna',      sku: 'VAC-001', unitPrice: '15000.00', costPrice: '8500.00',  stock: 50,  minStock: 10, unit: 'dosis',   supplier: 'BioVet Labs' }).returning();
-  const [pr3] = await db.insert(products).values({ name: 'Desparasitante Oral',      description: 'Desparasitante de amplio espectro',        category: 'medicamento', sku: 'MED-002', unitPrice: '8000.00',  costPrice: '4500.00',  stock: 75,  minStock: 15, unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
-  const [pr4] = await db.insert(products).values({ name: 'Meloxicam 1mg',            description: 'Antiinflamatorio no esteroideo',           category: 'medicamento', sku: 'MED-003', unitPrice: '3500.00',  costPrice: '1800.00',  stock: 3,   minStock: 10, unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
-  const [pr5] = await db.insert(products).values({ name: 'Collar Isabelino M',       description: 'Collar isabelino tamaño mediano',          category: 'accesorio',   sku: 'ACC-001', unitPrice: '3500.00',  costPrice: '1800.00',  stock: 30,  minStock: 5,  unit: 'unidad',  supplier: 'Pet Supplies CR' }).returning();
-  const [pr6] = await db.insert(products).values({ name: 'Alimento Premium Perro 15kg', description: 'Alimento premium para perros adultos', category: 'alimento',    sku: 'ALI-001', unitPrice: '25000.00', costPrice: '18000.00', stock: 8,   minStock: 5,  unit: 'bolsa',   supplier: 'Distribuidora Animal' }).returning();
-  const [pr7] = await db.insert(products).values({ name: 'Vacuna Polivalente Canina',description: 'Vacuna moquillo, parvovirus, hepatitis',   category: 'vacuna',      sku: 'VAC-002', unitPrice: '18000.00', costPrice: '10000.00', stock: 30,  minStock: 10, unit: 'dosis',   supplier: 'BioVet Labs' }).returning();
-  const [pr8] = await db.insert(products).values({ name: 'Otoclean 15ml',            description: 'Solución limpiadora auricular',            category: 'insumo',      sku: 'INS-001', unitPrice: '5000.00',  costPrice: '2500.00',  stock: 2,   minStock: 8,  unit: 'frasco',  supplier: 'VetMed Supplies' }).returning();
+  const [pr1] = await db.insert(products).values({ name: 'Amoxicilina 500mg',        description: 'Antibiótico de amplio espectro',           category: 'medicamento', sku: 'MED-001', unitPrice: '5500.00',  costPrice: '3200.00',  stock: '100', minStock: '20', unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
+  const [pr2] = await db.insert(products).values({ name: 'Vacuna Antirrábica',       description: 'Vacuna contra la rabia',                   category: 'vacuna',      sku: 'VAC-001', unitPrice: '15000.00', costPrice: '8500.00',  stock: '50',  minStock: '10', unit: 'dosis',   supplier: 'BioVet Labs' }).returning();
+  const [pr3] = await db.insert(products).values({ name: 'Desparasitante Oral',      description: 'Desparasitante de amplio espectro',        category: 'medicamento', sku: 'MED-002', unitPrice: '8000.00',  costPrice: '4500.00',  stock: '75',  minStock: '15', unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
+  const [pr4] = await db.insert(products).values({ name: 'Meloxicam 1mg',            description: 'Antiinflamatorio no esteroideo',           category: 'medicamento', sku: 'MED-003', unitPrice: '3500.00',  costPrice: '1800.00',  stock: '3',   minStock: '10', unit: 'tableta', supplier: 'Farmacéutica Nacional' }).returning();
+  const [pr5] = await db.insert(products).values({ name: 'Collar Isabelino M',       description: 'Collar isabelino tamaño mediano',          category: 'accesorio',   sku: 'ACC-001', unitPrice: '3500.00',  costPrice: '1800.00',  stock: '30',  minStock: '5',  unit: 'unidad',  supplier: 'Pet Supplies CR' }).returning();
+  const [pr6] = await db.insert(products).values({ name: 'Alimento Premium Perro 15kg', description: 'Alimento premium para perros adultos', category: 'alimento',    sku: 'ALI-001', unitPrice: '25000.00', costPrice: '18000.00', stock: '8',   minStock: '5',  unit: 'bolsa',   supplier: 'Distribuidora Animal' }).returning();
+  const [pr7] = await db.insert(products).values({ name: 'Vacuna Polivalente Canina',description: 'Vacuna moquillo, parvovirus, hepatitis',   category: 'vacuna',      sku: 'VAC-002', unitPrice: '18000.00', costPrice: '10000.00', stock: '30',  minStock: '10', unit: 'dosis',   supplier: 'BioVet Labs' }).returning();
+  const [pr8] = await db.insert(products).values({ name: 'Otoclean 15ml',            description: 'Solución limpiadora auricular',            category: 'insumo',      sku: 'INS-001', unitPrice: '5000.00',  costPrice: '2500.00',  stock: '2',   minStock: '8',  unit: 'frasco',  supplier: 'VetMed Supplies' }).returning();
   const prod1Id = pr1.id;
   const prod2Id = pr2.id;
   const prod3Id = pr3.id;
@@ -108,14 +108,14 @@ async function seed() {
   const prod8Id = pr8.id;
 
   await db.insert(stockMovements).values([
-    { productId: prod1Id, type: 'entrada', quantity: 100, reason: 'Inventario inicial', userId: adminId },
-    { productId: prod2Id, type: 'entrada', quantity: 50,  reason: 'Inventario inicial', userId: adminId },
-    { productId: prod3Id, type: 'entrada', quantity: 75,  reason: 'Inventario inicial', userId: adminId },
-    { productId: prod4Id, type: 'entrada', quantity: 20,  reason: 'Inventario inicial', userId: adminId },
-    { productId: prod7Id, type: 'entrada', quantity: 30,  reason: 'Inventario inicial', userId: adminId },
-    { productId: prod8Id, type: 'entrada', quantity: 15,  reason: 'Inventario inicial', userId: adminId },
-    { productId: pr5.id, type: 'entrada', quantity: 30, reason: 'Inventario inicial', userId: adminId },
-    { productId: pr6.id, type: 'entrada', quantity: 15, reason: 'Inventario inicial', userId: adminId },
+    { productId: prod1Id, type: 'entrada', quantity: '100', reason: 'Inventario inicial', userId: adminId },
+    { productId: prod2Id, type: 'entrada', quantity: '50',  reason: 'Inventario inicial', userId: adminId },
+    { productId: prod3Id, type: 'entrada', quantity: '75',  reason: 'Inventario inicial', userId: adminId },
+    { productId: prod4Id, type: 'entrada', quantity: '20',  reason: 'Inventario inicial', userId: adminId },
+    { productId: prod7Id, type: 'entrada', quantity: '30',  reason: 'Inventario inicial', userId: adminId },
+    { productId: prod8Id, type: 'entrada', quantity: '15',  reason: 'Inventario inicial', userId: adminId },
+    { productId: pr5.id, type: 'entrada', quantity: '30', reason: 'Inventario inicial', userId: adminId },
+    { productId: pr6.id, type: 'entrada', quantity: '15', reason: 'Inventario inicial', userId: adminId },
   ]);
   console.log('✅ Products + stock movements created.');
 

@@ -5,6 +5,7 @@ import { products, stockMovements } from '../../db/schema/inventory';
 import { eq, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatQty } from '../../lib/utils';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/login');
@@ -53,13 +54,13 @@ const categoryLabels: Record<string, string> = {
         )}
         <div class="flex justify-between border-b pb-2">
           <dt class="text-muted-foreground">Stock actual</dt>
-          <dd class={`font-bold ${product.stock <= product.minStock ? 'text-red-600' : 'text-green-700'}`}>
-            {product.stock} {product.unit}
+          <dd class={`font-bold ${parseFloat(product.stock) <= parseFloat(product.minStock) ? 'text-red-600' : 'text-green-700'}`}>
+            {formatQty(product.stock)} {product.unit}
           </dd>
         </div>
         <div class="flex justify-between border-b pb-2">
           <dt class="text-muted-foreground">Stock mínimo</dt>
-          <dd>{product.minStock} {product.unit}</dd>
+          <dd>{formatQty(product.minStock)} {product.unit}</dd>
         </div>
         {product.sku && <div class="flex justify-between border-b pb-2"><dt class="text-muted-foreground">SKU</dt><dd class="font-mono text-xs">{product.sku}</dd></div>}
         {product.supplier && <div class="flex justify-between border-b pb-2"><dt class="text-muted-foreground">Proveedor</dt><dd>{product.supplier}</dd></div>}
@@ -88,9 +89,13 @@ const categoryLabels: Record<string, string> = {
               <div>
                 <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2 ${
                   m.type === 'entrada' ? 'bg-green-100 text-green-700' :
-                  m.type === 'salida' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                  m.type === 'salida' ? 'bg-red-100 text-red-700' :
+                  m.type === 'consumo_interno' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
                 }`}>
-                  {m.type === 'entrada' ? '+' : m.type === 'salida' ? '-' : '~'}{m.quantity}
+                  {m.type === 'entrada' ? '+' : (m.type === 'salida' || m.type === 'consumo_interno') ? '-' : '~'}{formatQty(m.quantity)}
+                </span>
+                <span class="text-xs text-muted-foreground mr-2">
+                  {m.type === 'consumo_interno' ? 'Consumo interno' : m.type === 'entrada' ? 'Entrada' : m.type === 'salida' ? 'Salida' : 'Ajuste'}
                 </span>
                 {m.reason && <span class="text-muted-foreground">{m.reason}</span>}
               </div>

@@ -40,7 +40,8 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     name, category, sku,
     unitPrice: unitPrice !== undefined ? String(unitPrice) : undefined,
     costPrice: costPrice !== undefined ? String(costPrice) : undefined,
-    minStock, unit, expirationDate: expirationDate || null, supplier,
+    minStock: minStock !== undefined ? String(minStock) : undefined,
+    unit, expirationDate: expirationDate || null, supplier,
   }).where(eq(products.id, id));
 
   if (unitPrice !== undefined && before && String(unitPrice) !== before.unitPrice) {
