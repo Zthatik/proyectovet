@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, Eye } from 'lucide-react';
+import { Search, Plus, Calendar, Eye, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { buildWhatsappLink, buildAppointmentReminderMessage, appointmentTypeLabels } from '../../lib/whatsapp';
+import { Skeleton } from '../ui/skeleton';
+import { EmptyState } from '../ui/empty-state';
 
 interface Appointment {
   id: number;
@@ -15,7 +18,25 @@ interface Appointment {
   patientSpecies?: string;
   ownerFirstName?: string;
   ownerLastName?: string;
+  ownerPhone?: string | null;
   veterinarianName?: string;
+}
+
+const ACTIVE_STATUSES = ['programada', 'confirmada', 'en_camino', 'en_curso'];
+
+function whatsappReminderLink(a: Appointment): string | null {
+  if (!ACTIVE_STATUSES.includes(a.status)) return null;
+  return buildWhatsappLink(
+    a.ownerPhone,
+    buildAppointmentReminderMessage({
+      ownerName: `${a.ownerFirstName ?? ''} ${a.ownerLastName ?? ''}`.trim() || 'tutor/a',
+      patientName: a.patientName || 'su mascota',
+      appointmentDate: format(new Date(a.scheduledAt), "EEEE dd 'de' MMMM 'de' yyyy", { locale: es }),
+      appointmentTime: format(new Date(a.scheduledAt), 'HH:mm'),
+      appointmentTypeLabel: appointmentTypeLabels[a.type] || a.type,
+      veterinarianName: a.veterinarianName || 'nuestro equipo',
+    }),
+  );
 }
 
 const statusColors: Record<string, string> = {
@@ -101,14 +122,21 @@ export function AppointmentList() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="rounded-xl border overflow-hidden">
+          <div className="bg-muted/50 p-3"><Skeleton className="h-4 w-32" /></div>
+          <div className="divide-y">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-24 hidden sm:block" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : appointments.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Calendar className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No hay citas registradas</p>
-        </div>
+        <EmptyState icon={Calendar} title="No hay citas registradas" />
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
@@ -152,9 +180,23 @@ export function AppointmentList() {
                     </select>
                   </td>
                   <td className="px-4 py-3">
-                    <a href={`/citas/${a.id}`} className="flex items-center gap-1 text-primary hover:underline text-xs">
-                      <Eye className="h-3.5 w-3.5" /> Ver
-                    </a>
+                    <div className="flex items-center gap-3">
+                      {whatsappReminderLink(a) && (
+                        <a
+                          href={whatsappReminderLink(a)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Recordar por WhatsApp a ${a.ownerFirstName} ${a.ownerLastName}`}
+                          className="flex items-center gap-1 text-xs font-medium hover:underline"
+                          style={{ color: '#1DA851' }}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                        </a>
+                      )}
+                      <a href={`/citas/${a.id}`} className="flex items-center gap-1 text-primary hover:underline text-xs">
+                        <Eye className="h-3.5 w-3.5" /> Ver
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
