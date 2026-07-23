@@ -1,5 +1,6 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import { PaymentLinkButton } from '../../components/billing/PaymentLinkButton';
 import { db } from '../../db';
 import { invoices, invoiceItems, payments } from '../../db/schema/billing';
 import { owners } from '../../db/schema/patients';
@@ -125,10 +126,13 @@ const fmt = (n: string) => parseFloat(n).toLocaleString('es-CL', { maximumFracti
         </div>
       )}
       {invoice.status !== 'pagada' && invoice.status !== 'anulada' && (
-        <a href={`/facturacion/${id}/pago`}
-          class="inline-block text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-          Registrar Pago
-        </a>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href={`/facturacion/${id}/pago`}
+            class="inline-block text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            Registrar Pago
+          </a>
+          <PaymentLinkButton client:load invoiceId={id} ownerName={`${invoice.ownerFirstName} ${invoice.ownerLastName}`} ownerPhone={invoice.ownerPhone} />
+        </div>
       )}
     </div>
   </div>
