@@ -177,29 +177,12 @@ const whatsappReminderLink = buildWhatsappLink(
             💬 Recordar por WhatsApp
           </a>
         )}
-        {canAct && isActive && (
-          <button id="btn-remind"
-            class="px-4 py-2 rounded-lg border text-sm hover:bg-muted transition-colors">
-            📧 Recordatorio
-          </button>
-        )}
       </div>
     </div>
   </div>
 </DashboardLayout>
 
 <script define:vars={{ apptId: id }}>
-  const remindBtn = document.getElementById('btn-remind');
-  if (remindBtn) {
-    remindBtn.addEventListener('click', () => {
-      remindBtn.disabled = true;
-      remindBtn.textContent = 'Enviando...';
-      fetch('/api/appointments/' + apptId + '/remind', { method: 'POST' })
-        .then(r => r.json())
-        .then(d => { remindBtn.textContent = d.success ? '✓ Enviado' : 'Error'; })
-        .catch(() => { remindBtn.textContent = 'Error'; remindBtn.disabled = false; });
-    });
-  }
   document.querySelectorAll('.status-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       btn.disabled = true;

@@ -44,12 +44,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Contrasena</Label>
-          <a href="/recuperar-contrasena" className="text-xs text-primary hover:underline">
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
+        <Label htmlFor="password">Contrasena</Label>
         <Input
           id="password"
           type="password"
@@ -75,6 +70,9 @@ export function LoginForm() {
         <a href="/register" className="text-primary hover:underline">
           Registrate
         </a>
+      </p>
+      <p className="text-center text-xs text-muted-foreground">
+        ¿Olvidaste tu contraseña? Pídele a un administrador que te la restablezca.
       </p>
     </form>
   );

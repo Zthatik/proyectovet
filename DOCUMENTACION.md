@@ -16,7 +16,7 @@ recetas, laboratorio, inventario y facturación, con autenticación por roles.
 | Base de datos | **PostgreSQL** (Supabase) — *migrado desde MySQL* |
 | Validación | **Zod 4** |
 | PDF | `@react-pdf/renderer` (facturas y recetas) |
-| Email | Nodemailer (recordatorios de citas, opcional) |
+| Recordatorios | WhatsApp clic-para-enviar (wa.me), sin proveedor externo |
 | Hosting | **Vercel** (adaptador `@astrojs/vercel`) |
 
 > Histórico: el proyecto nació sobre **MySQL + Railway + Docker**. Se migró a
@@ -54,7 +54,7 @@ src/
 │   ├── permissions.ts Matriz de permisos por rol
 │   ├── rateLimit.ts   Rate limiter en memoria
 │   ├── schemas.ts     Esquemas Zod de validación
-│   ├── email/         Envío de correos
+│   ├── whatsapp.ts    Enlaces wa.me para recordatorios de citas
 │   ├── pdf/           Plantillas PDF de factura y receta
 │   └── utils.ts       Utilidades (cn, formato)
 ├── middleware.ts      Auth + headers de seguridad + rate limit
@@ -110,7 +110,7 @@ Todos bajo `/api/`, protegidos por el middleware (sesión obligatoria salvo `/ap
 | Auth | `/api/auth/[...all]` (Better Auth) |
 | Pacientes | `/api/patients`, `/api/patients/[id]` |
 | Tutores | `/api/owners`, `/api/owners/[id]` |
-| Citas | `/api/appointments`, `/api/appointments/[id]`, `.../remind`, `/reminders-bulk` |
+| Citas | `/api/appointments`, `/api/appointments/[id]` |
 | Historial | `/api/medical`, `/api/medical/[id]`, `/api/medical/vaccines` |
 | Vacunas | `/api/vaccines`, `/api/vaccines/[id]`, `/api/vaccines/upcoming` |
 | Recetas | `/api/prescriptions`, `/api/prescriptions/[id]`, `.../pdf` |
@@ -149,7 +149,6 @@ Detalle completo en [SECURITY.md](SECURITY.md).
 | `DIRECT_URL` | Cadena **directa/sesión** de Supabase (puerto 5432). Usada por `drizzle-kit` para migraciones. |
 | `BETTER_AUTH_SECRET` | Secreto aleatorio ≥ 32 chars (`openssl rand -base64 32`). |
 | `BETTER_AUTH_URL` | URL pública HTTPS del despliegue (sin barra final). |
-| `SMTP_*` | (Opcional) credenciales de correo para recordatorios. |
 
 ### Notas técnicas (verificadas con Context7)
 
