@@ -325,21 +325,6 @@ export const registerSchema = z.object({
 });
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
-// ── Auth: Recuperar contraseña ───────────────────────────────────────────────
-export const requestPasswordResetSchema = z.object({
-  email: z.string().min(1, 'El correo es requerido').email('Correo inválido'),
-});
-export type RequestPasswordResetFormData = z.infer<typeof requestPasswordResetSchema>;
-
-export const resetPasswordSchema = z.object({
-  password:        z.string().min(8, 'Mínimo 8 caracteres').max(100),
-  confirmPassword: z.string().min(1, 'Confirma la contraseña'),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: 'Las contraseñas no coinciden',
-  path: ['confirmPassword'],
-});
-export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
-
 // ── Portal del tutor (self-service) ────────────────────────────────────────────
 export const clientProfileSchema = z.object({
   phone: z.string().max(20).optional().nullable(),

@@ -196,11 +196,10 @@ const statusColors: Record<string, string> = {
             </a>
           </div>
           {(user.role === 'admin' || user.role === 'recepcionista') && (
-            <div class="mt-3 pt-3 border-t flex items-center justify-between">
-              <p class="text-xs text-muted-foreground">Enviar recordatorios por email para citas en las próximas 24 horas</p>
-              <button id="btn-bulk-remind" class="text-xs px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors">
-                📧 Enviar recordatorios
-              </button>
+            <div class="mt-3 pt-3 border-t">
+              <p class="text-xs text-muted-foreground">
+                Los recordatorios de citas se envían por WhatsApp: en la lista de <a href="/citas" class="text-primary hover:underline">Citas</a> hay un botón de WhatsApp por cada cita próxima, listo para enviar con un clic.
+              </p>
             </div>
           )}
         </div>
@@ -208,22 +207,3 @@ const statusColors: Record<string, string> = {
     )}
   </div>
 </DashboardLayout>
-
-<script>
-  const btn = document.getElementById('btn-bulk-remind');
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      if (!confirm('¿Enviar recordatorios por email a los tutores con citas en las próximas 24 horas?')) return;
-      btn.disabled = true;
-      btn.textContent = '⏳ Enviando...';
-      try {
-        const res = await fetch('/api/appointments/reminders-bulk', { method: 'POST' });
-        const d = await res.json();
-        btn.textContent = `✓ ${d.sent} enviados${d.failed > 0 ? `, ${d.failed} fallaron` : ''}`;
-      } catch {
-        btn.textContent = 'Error al enviar';
-        btn.disabled = false;
-      }
-    });
-  }
-</script>
